@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>心理咨询工作站</title>
+<style>
+  /* ===== Design Tokens ===== */
+  :root{
+    --u: 1px;
+    --primary:#6366F1;
+    --primary-d:#4F46E5;
+    --primary-grad:linear-gradient(135deg,#6366F1 0%,#8B5CF6 55%,#A855F7 100%);
+    --primary-soft:#EEF2FF;
+    --calm:#14B8A6;
+    --calm-grad:linear-gradient(135deg,#2DD4BF 0%,#14B8A6 100%);
+    --calm-soft:#F0FDFA;
+    --danger:#EF4444;
+    --danger-grad:linear-gradient(135deg,#F87171 0%,#EF4444 100%);
+    --danger-soft:#FEF2F2;
+    --warn:#F59E0B;
+    --warn-soft:#FFF7E6;
+    --bg:#F6F7FB;
+    --bg-soft:#EFF1F7;
+    --card:#FFFFFF;
+    --card-elev:#FAFBFD;
+    --card-grad:linear-gradient(160deg,#FFFFFF 0%,#F6F8FD 100%);
+    --text-dark:#1F2430;
+    --text-body:#3A4150;
+    --text-gray:#9AA1B1;
+    --border:#ECEEF4;
+    --r-sm:10px;
+    --r-lg:16px;
+    --r-xl:22px;
+    --r-full:999px;
+    --shadow-sm:0 1px 3px rgba(17,24,39,.06),0 1px 2px rgba(17,24,39,.04);
+    --shadow-md:0 8px 22px rgba(99,102,241,.10),0 3px 8px rgba(17,24,39,.06);
+    --shadow-glow-primary:0 8px 22px rgba(99,102,241,.30);
+    --shadow-glow-calm:0 8px 22px rgba(20,184,166,.26);
+    --shadow-glow-danger:0 10px 26px rgba(239,68,68,.32);
+    --tabbar-h:64px;
+    --header-grad:linear-gradient(135deg,#6366F1 0%,#8B5CF6 55%,#A855F7 100%);
+    --ease-soft:cubic-bezier(.22,.65,.36,1);
+  }
+  [data-theme="dark"]{
+    --bg:#0F1218;
+    --bg-soft:#171B24;
+    --card:#1A1E27;
+    --card-elev:#21262F;
+    --card-grad:linear-gradient(160deg,#1D222C 0%,#161A22 100%);
+    --text-dark:#EEF1F7;
+    --text-body:#C7CDD9;
+    --text-gray:#7C8494;
+    --border:#262B36;
+    --primary-soft:#222645;
+    --calm-soft:#14302c;
+    --danger-soft:#3a1f22;
+    --warn-soft:#3a2e16;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.5);
+    --shadow-md:0 12px 32px rgba(0,0,0,.55);
+    --shadow-glow-primary:0 8px 26px rgba(99,102,241,.45);
+    --shadow-glow-calm:0 8px 26px rgba(20,184,166,.40);
+    --shadow-glow-danger:0 10px 28px rgba(239,68,68,.48);
+  }
+
+  /* ===== Base ===== */
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:#EBEDF4;
+    color:var(--text-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  [data-theme="dark"] body{background:#080A0E;}
+  .app{
+    position:relative;
+    max-width:440px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 0 0 1px rgba(17,24,39,.03);
+  }
+  @media (min-width:480px){
+    .app{margin:18px auto;min-height:calc(100vh - 36px);border-radius:34px;box-shadow:0 24px 70px rgba(20,24,40,.18);overflow:hidden;}
+    body{padding:0;}
+  }
+
+  /* ---- Screens ---- */
+  .screens{position:relative;flex:1 1 auto;overflow:hidden;}
+  .ws-screen{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding-bottom:calc(var(--tabbar-h) + 16px);}
+  .ws-screen.active{display:block;animation:fadeUp .26s var(--ease-soft);}
+  .ws-screen::-webkit-scrollbar{width:0;}
+
+  /* ---- Header (home) ---- */
+  .ws-header{
+    background:var(--header-grad);color:#fff;padding:18px 20px 30px;border-radius:0 0 26px 26px;position:relative;overflow:hidden;
+  }
+  .ws-header::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.12);}
+  .ws-header::before{content:"";position:absolute;right:30px;bottom:-50px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.08);}
+  .ws-back{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;background:rgba(255,255,255,.18);color:#fff;padding:6px 12px;border-radius:var(--r-full);border:none;cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:background .2s,transform .15s var(--ease-soft);}
+  .ws-back:active{transform:scale(.95);background:rgba(255,255,255,.28);}
+  .ws-back svg{width:15px;height:15px;}
+  .ws-htitle{margin:16px 0 4px;font-size:23px;font-weight:800;letter-spacing:-.01em;}
+  .ws-hsub{font-size:13px;opacity:.9;font-weight:400;}
+
+  .ws-body{padding:0 16px;margin-top:-18px;position:relative;z-index:2;display:flex;flex-direction:column;gap:16px;}
+
+  /* ---- Cards ---- */
+  .card{background:var(--card-grad);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:16px;transition:transform .22s var(--ease-soft),box-shadow .22s ease,border-color .22s ease;}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .card:active{transform:scale(.985);}
+  .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .card-h .t{font-size:15px;font-weight:700;color:var(--text-dark);letter-spacing:-.01em;}
+  .card-h .more{font-size:12px;color:var(--text-gray);}
+
+  /* mood check-in */
+  .mood-q{font-size:15px;font-weight:700;color:var(--text-dark);margin-bottom:2px;line-height:1.5;}
+  .mood-sub{font-size:12px;color:var(--text-gray);margin-bottom:14px;line-height:1.5;}
+  .moods{display:flex;justify-content:space-between;gap:6px;}
+  .mood{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 2px;border-radius:14px;background:var(--bg-soft);border:2px solid transparent;cursor:pointer;transition:transform .18s var(--ease-soft),border-color .2s,background .2s,box-shadow .2s;}
+  .mood .e{font-size:26px;line-height:1;filter:grayscale(.35);opacity:.6;transition:transform .22s var(--ease-soft),filter .22s,opacity .22s;}
+  .mood .l{font-size:11px;color:var(--text-gray);transition:color .2s;}
+  .mood:hover{background:var(--card-elev);}
+  .mood:active{transform:scale(.95);}
+  .mood.sel{border-color:var(--primary);background:var(--primary-soft);box-shadow:var(--shadow-glow-primary);}
+  .mood.sel .e{filter:none;opacity:1;transform:scale(1.16);}
+  .mood.sel .l{color:var(--primary);font-weight:600;}
+  .mood-msg{margin-top:12px;font-size:13px;color:var(--primary-d);font-weight:600;min-height:18px;text-align:center;line-height:1.5;}
+
+  /* quick grid */
+  .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .quick{background:var(--card-grad);border-radius:14px;box-shadow:var(--shadow-sm);padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:none;text-align:center;transition:transform .2s var(--ease-soft),box-shadow .2s,background .18s;}
+  .quick:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);background:var(--card-elev);}
+  .quick:active{transform:scale(.96);}
+  .quick .qi{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease-soft);}
+  .quick:hover .qi{transform:scale(1.12);}
+  .quick .qi svg{width:22px;height:22px;}
+  .quick .ql{font-size:12px;font-weight:600;color:var(--text-body);}
+  .quick .qd{font-size:10px;color:var(--text-soft);font-weight:500;margin-top:1px;}
+  .ws-statusbar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 2px;font-size:11px;color:var(--text-soft);}
+  .ws-statusbar .sb-l{font-weight:600;color:var(--text-body);}
+  .ws-statusbar .sb-r{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;}
+  .qi.c-indigo{background:var(--primary-soft);color:var(--primary);}
+  .qi.c-calm{background:var(--calm-soft);color:var(--calm);}
+  .qi.c-warn{background:var(--warn-soft);color:var(--warn);}
+  .qi.c-pink{background:#FDF2F8;color:#EC4899;}
+  .qi.c-blue{background:#EFF6FF;color:#3B82F6;}
+  .qi.c-violet{background:#F5F3FF;color:#8B5CF6;}
+
+  /* crisis card */
+  .crisis{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFF5F5 0%,#FDEEF1 100%);border:1px solid #FBD5D8;border-radius:var(--r-lg);padding:18px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 8px 22px rgba(244,63,94,.12);}
+  .crisis::before{content:"";position:absolute;right:-34px;top:-34px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(244,63,94,.10),transparent 70%);pointer-events:none;}
+  [data-theme="dark"] .crisis{background:linear-gradient(135deg,#311A1D,#241A1B);border-color:#5b2a2e;box-shadow:0 10px 26px rgba(0,0,0,.4);}
+  [data-theme="dark"] .crisis::before{background:radial-gradient(circle,rgba(244,63,94,.16),transparent 70%);}
+  .crisis .ci{position:relative;width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#FCA5A8,#F87171);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 14px rgba(239,68,68,.28);}
+  .crisis .ci svg{width:24px;height:24px;}
+  .crisis .ct{font-size:15px;font-weight:700;color:#BE123C;margin-bottom:4px;letter-spacing:-.01em;}
+  .crisis .cd{font-size:12.5px;color:#9B4A4A;line-height:1.55;margin-bottom:12px;}
+  .crisis .cbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--danger-grad);color:#fff;border:none;padding:11px 16px;border-radius:var(--r-full);font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-glow-danger);transition:transform .12s var(--ease-soft),opacity .2s,box-shadow .2s;}
+  .crisis .cbtn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(239,68,68,.42);}
+  .crisis .cbtn svg{width:16px;height:16px;}
+  .crisis .cbtn:active{transform:scale(.96);opacity:.9;}
+  [data-theme="dark"] .crisis .ct{color:#FDA4AF;}
+  [data-theme="dark"] .crisis .cd{color:#E7B6BA;}
+
+  .tip{display:flex;gap:10px;align-items:flex-start;background:var(--calm-soft);border-radius:14px;padding:12px 14px;}
+  [data-theme="dark"] .tip{background:#14302c;}
+  .tip .te{font-size:20px;}
+  .tip .tt{font-size:12.5px;color:var(--text-body);line-height:1.6;}
+  .tip .tt b{color:var(--calm);}
+
+  /* ---- Tab bar ---- */
+  .ws-tabbar{position:absolute;left:0;right:0;bottom:0;height:var(--tabbar-h);background:rgba(255,255,255,.72);backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:40;box-shadow:0 -2px 18px rgba(17,24,39,.06);}
+  [data-theme="dark"] .ws-tabbar{background:rgba(18,22,30,.72);box-shadow:0 -2px 18px rgba(0,0,0,.4);}
+  .ws-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-gray);cursor:pointer;font-size:10px;font-weight:500;transition:color .2s,transform .2s var(--ease-soft);}
+  .ws-tab svg{width:23px;height:23px;transition:transform .2s var(--ease-soft);}
+  .ws-tab.active{color:var(--primary);transform:scale(1.05);}
+  .ws-tab.active svg{color:var(--primary);}
+  .ws-tab:active{opacity:.7;transform:scale(.96);}
+
+  /* SOS fab */
+  .sos-fab{position:absolute;right:16px;bottom:calc(var(--tabbar-h) + 18px);z-index:50;width:56px;height:56px;border-radius:50%;background:var(--danger-grad);color:#fff;border:none;box-shadow:var(--shadow-glow-danger);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:1px;transition:transform .15s var(--ease-soft),box-shadow .2s;}
+  .sos-fab svg{width:22px;height:22px;}
+  .sos-fab span{font-size:9px;font-weight:700;letter-spacing:.5px;}
+  .sos-fab:active{transform:scale(.9);}
+
+  /* ---- Lists (assessment / book) ---- */
+  .ws-pad{padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .ws-pagehead{padding:18px 16px 4px;}
+  .ws-pagehead h2{margin:0;font-size:20px;font-weight:800;color:var(--text-dark);letter-spacing:-.01em;}
+  .ws-pagehead p{margin:4px 0 0;font-size:12.5px;color:var(--text-gray);line-height:1.5;}
+
+  .scale-item{display:flex;align-items:center;gap:14px;background:var(--card-grad);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-sm);cursor:pointer;border:none;width:100%;text-align:left;transition:transform .2s var(--ease-soft),background .15s,box-shadow .2s;}
+  .scale-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .scale-item:active{transform:scale(.985);background:var(--card-elev);}
+  .scale-ic{width:46px;height:46px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .scale-ic svg{width:24px;height:24px;}
+  .scale-mid{flex:1;}
+  .scale-mid .sn{font-size:15px;font-weight:700;color:var(--text-dark);}
+  .scale-mid .sd{font-size:12px;color:var(--text-gray);margin-top:2px;line-height:1.4;}
+  .scale-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+  .scale-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-full);background:var(--bg-soft);color:var(--text-gray);}
+  .scale-last{font-size:11px;color:var(--text-gray);}
+  .chev{color:var(--text-gray);transition:transform .2s var(--ease-soft);}
+  .chev svg{width:18px;height:18px;}
+  .scale-item:hover .chev,.coun:hover .chev{transform:translateX(2px);}
+
+  .disclaimer{font-size:11.5px;color:var(--text-gray);background:var(--bg-soft);border-radius:12px;padding:10px 12px;line-height:1.55;display:flex;gap:8px;}
+  .disclaimer svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;color:var(--warn);}
+
+  /* counselor */
+  .coun{display:flex;gap:12px;background:var(--card-grad);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-sm);cursor:pointer;border:none;width:100%;text-align:left;transition:transform .2s var(--ease-soft),box-shadow .2s;}
+  .coun:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .coun:active{transform:scale(.985);}
+  .ava{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;flex-shrink:0;box-shadow:var(--shadow-sm);}
+  .coun-mid{flex:1;}
+  .coun-mid .cn{font-size:15px;font-weight:700;color:var(--text-dark);display:flex;align-items:center;gap:6px;}
+  .coun-mid .ct{font-size:12px;color:var(--primary);font-weight:600;margin-top:1px;}
+  .coun-mid .cs{font-size:11.5px;color:var(--text-gray);margin-top:4px;line-height:1.45;}
+  .coun-mid .crate{font-size:11.5px;color:var(--warn);margin-top:4px;font-weight:600;}
+  .coun .chev{align-self:center;}
+
+  /* ---- Overlay / Modal ---- */
+  .overlay{position:fixed;inset:0;background:rgba(15,18,28,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+  .overlay.show{display:flex;animation:fadeIn .2s ease;}
+  @media (min-width:480px){.overlay{align-items:center;}}
+  .sheet{width:100%;max-width:440px;max-height:92vh;background:var(--card-grad);border:1px solid var(--border);border-bottom:none;border-radius:var(--r-xl) var(--r-xl) 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -14px 48px rgba(17,24,39,.22);animation:slideUp .32s var(--ease-soft);}
+  @media (min-width:480px){.sheet{border-radius:var(--r-xl);border-bottom:1px solid var(--border);}}
+  .sheet-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);flex:0 0 auto;}
+  .sheet-h .st{font-size:16px;font-weight:700;color:var(--text-dark);}
+  .sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg-soft);border:none;color:var(--text-gray);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s var(--ease-soft),background .2s;}
+  .sheet-close:hover{background:var(--card-elev);}
+  .sheet-close:active{transform:scale(.9);}
+  .sheet-close svg{width:16px;height:16px;}
+  .sheet-body{overflow-y:auto;padding:18px;flex:1 1 auto;}
+  .sheet-body::-webkit-scrollbar{width:0;}
+  .btn-primary{background:var(--primary-grad);color:#fff;border:none;padding:13px;border-radius:var(--r-full);font-size:15px;font-weight:600;cursor:pointer;width:100%;box-shadow:0 6px 16px rgba(99,102,241,.32);transition:transform .12s var(--ease-soft),box-shadow .2s,opacity .2s;}
+  .btn-primary:active{transform:scale(.97);box-shadow:0 3px 10px rgba(99,102,241,.30);}
+  .btn-primary:disabled{background:var(--text-gray);opacity:.55;cursor:not-allowed;box-shadow:none;}
+  .btn-ghost{background:var(--bg-soft);color:var(--text-body);border:1px solid var(--border);padding:13px;border-radius:var(--r-full);font-size:15px;font-weight:600;cursor:pointer;width:100%;transition:transform .12s var(--ease-soft),background .2s;}
+  .btn-ghost:active{transform:scale(.97);background:var(--card-elev);}
+
+  /* questionnaire */
+  .q-intro{font-size:13px;color:var(--text-gray);margin-bottom:6px;line-height:1.5;}
+  .q-item{padding:14px 0;border-bottom:1px solid var(--border);}
+  .q-item .qi-t{font-size:14px;font-weight:600;color:var(--text-dark);margin-bottom:10px;line-height:1.5;}
+  .q-opts{display:flex;flex-direction:column;gap:8px;}
+  .q-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);cursor:pointer;font-size:13.5px;color:var(--text-body);transition:transform .15s var(--ease-soft),background .2s,border-color .2s,box-shadow .2s,color .2s;}
+  .q-opt:hover{background:var(--card-elev);}
+  .q-opt .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--text-gray);flex-shrink:0;transition:all .2s var(--ease-soft);}
+  .q-opt.sel{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d);font-weight:600;box-shadow:var(--shadow-glow-primary);}
+  .q-opt.sel .dot{border-color:var(--primary);background:var(--primary);box-shadow:inset 0 0 0 3px var(--card);}
+
+  /* result */
+  .res-score{text-align:center;margin:6px 0 4px;}
+  .res-score .num{font-size:54px;font-weight:800;color:var(--primary);line-height:1;}
+  .res-score .den{font-size:18px;color:var(--text-gray);font-weight:600;}
+  .res-band{text-align:center;font-size:16px;font-weight:700;margin:8px 0 14px;}
+  .res-bar{height:10px;border-radius:var(--r-full);background:var(--bg-soft);overflow:hidden;margin:10px 0 6px;}
+  .res-bar i{display:block;height:100%;border-radius:var(--r-full);background:linear-gradient(90deg,var(--calm),var(--primary));}
+  .res-adv{background:var(--bg-soft);border-radius:14px;padding:14px;font-size:13px;color:var(--text-body);line-height:1.7;}
+  .res-adv b{color:var(--text-dark);}
+  .res-crisis{background:var(--danger-soft);border:1px solid #FCA5A5;border-radius:14px;padding:14px;margin-top:12px;font-size:13px;color:#B91C1C;line-height:1.7;}
+  .res-crisis b{display:block;margin-bottom:4px;}
+
+  /* booking */
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:8px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{padding:9px 14px;border-radius:var(--r-full);background:var(--card);border:1.5px solid var(--border);font-size:13px;color:var(--text-body);cursor:pointer;transition:all .2s var(--ease-soft);}
+  .chip:hover{background:var(--card-elev);}
+  .chip.sel{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d);font-weight:600;box-shadow:var(--shadow-glow-primary);}
+  .chip:disabled{opacity:.4;cursor:not-allowed;}
+  textarea.inp,input.inp{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:14px;color:var(--text-dark);background:var(--card);font-family:inherit;resize:none;outline:none;line-height:1.6;transition:border-color .2s,box-shadow .2s;}
+  textarea.inp:focus,input.inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;}
+  .toggle-row .tl{font-size:14px;color:var(--text-body);}
+  .switch{width:46px;height:26px;border-radius:var(--r-full);background:var(--border);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+  .switch.on{background:var(--primary);box-shadow:var(--shadow-glow-primary);}
+  .switch i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s var(--ease-soft);box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .switch.on i{left:23px;}
+
+  /* mine */
+  .stat-row{display:flex;gap:10px;}
+  .stat{flex:1;background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow-sm);text-align:center;transition:transform .2s var(--ease-soft),box-shadow .2s;}
+  .stat:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .stat .v{font-size:22px;font-weight:800;color:var(--primary);}
+  .stat .l{font-size:11px;color:var(--text-gray);margin-top:2px;}
+  .mood-chart{display:flex;align-items:flex-end;gap:4px;height:90px;padding:8px 2px 0;}
+  .mc-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%;}
+  .mc-bar .b{flex:1;width:100%;max-width:14px;border-radius:6px 6px 3px 3px;background:var(--primary-soft);min-height:4px;transition:height .3s var(--ease-soft);}
+  .mc-bar .d{font-size:9px;color:var(--text-gray);}
+  .empty{text-align:center;padding:30px 0;color:var(--text-gray);font-size:13px;}
+  .empty svg{width:40px;height:40px;opacity:.4;margin-bottom:8px;}
+
+  .appt{display:flex;gap:12px;background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow-sm);}
+  .appt .ai{width:42px;height:42px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+  .appt .am{flex:1;}
+  .appt .am .at{font-size:14px;font-weight:700;color:var(--text-dark);}
+  .appt .am .ad{font-size:12px;color:var(--text-gray);margin-top:3px;line-height:1.4;}
+  .appt .as{font-size:11px;font-weight:600;color:var(--calm);align-self:flex-start;background:var(--calm-soft);padding:3px 9px;border-radius:var(--r-full);}
+
+  /* breathing */
+  .breath-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 0;}
+  .breath-circle{width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#A5B4FC,#6366F1);box-shadow:0 16px 40px rgba(99,102,241,.4);display:flex;align-items:center;justify-content:center;transition:transform 1.4s cubic-bezier(.45,.05,.55,.95);transform:scale(.5);}
+  .breath-circle .bt{color:#fff;font-size:20px;font-weight:700;text-align:center;}
+  .breath-count{margin-top:24px;font-size:15px;color:var(--text-gray);}
+  .breath-count b{color:var(--primary);font-size:18px;}
+
+  /* articles */
+  .art{background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow-sm);margin-bottom:10px;cursor:pointer;transition:transform .2s var(--ease-soft),box-shadow .2s;}
+  .art:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .art .ah{font-size:14.5px;font-weight:700;color:var(--text-dark);margin-bottom:6px;}
+  .art .aex{font-size:12.5px;color:var(--text-gray);line-height:1.6;}
+  .art-full{font-size:14px;color:var(--text-body);line-height:1.8;}
+  .art-full p{margin:0 0 12px;}
+
+  /* treehole */
+  .th-input{width:100%;border:1.5px solid var(--border);border-radius:14px;padding:12px;font-size:14px;color:var(--text-dark);background:var(--card);font-family:inherit;resize:none;outline:none;min-height:80px;line-height:1.6;transition:border-color .2s,box-shadow .2s;}
+  .th-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  .th-list{margin-top:8px;display:flex;flex-direction:column;gap:10px;}
+  .th-item{background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:13px;box-shadow:var(--shadow-sm);}
+  .th-item .th-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text-gray);margin-bottom:6px;}
+  .th-item .th-txt{font-size:13.5px;color:var(--text-body);line-height:1.6;}
+  .th-hug{margin-top:8px;font-size:12px;color:var(--calm);font-weight:600;background:none;border:none;cursor:pointer;display:inline-flex;gap:4px;align-items:center;padding:0;transition:transform .15s var(--ease-soft),opacity .2s;}
+  .th-hug:active{transform:scale(.92);}
+
+  .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,24,32,.9);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;max-width:80%;text-align:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  .toast.show{opacity:1;}
+
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  .seg{font-size:12px;color:var(--text-gray);margin:2px 0 10px;line-height:1.5;}
+
+  /* ---- sheet back button ---- */
+  .sheet-back{width:30px;height:30px;border-radius:50%;background:var(--bg-soft);border:none;color:var(--text-gray);display:none;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s var(--ease-soft),background .2s;flex-shrink:0;}
+  .sheet-back:hover{background:var(--card-elev);}
+  .sheet-back:active{transform:scale(.9);}
+  .sheet-back svg{width:16px;height:16px;}
+
+  /* ---- confirm dialog ---- */
+  .confirm-ov{position:fixed;inset:0;background:rgba(15,18,28,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:300;display:none;align-items:center;justify-content:center;padding:30px;}
+  .confirm-ov.show{display:flex;animation:fadeIn .18s ease;}
+  .confirm-card{width:100%;max-width:320px;background:var(--card-grad);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-md);}
+  .confirm-title{font-size:16px;font-weight:700;color:var(--text-dark);margin-bottom:8px;}
+  .confirm-msg{font-size:13.5px;color:var(--text-body);line-height:1.6;margin-bottom:16px;}
+  .confirm-btns{display:flex;gap:10px;}
+  .confirm-btns button{flex:1;}
+  .btn-primary.danger{background:var(--danger-grad);box-shadow:var(--shadow-glow-danger);}
+
+  /* ---- filter tabs ---- */
+  .filter-tabs{display:flex;gap:8px;margin-bottom:12px;}
+  .ftab{flex:1;text-align:center;padding:8px 0;border-radius:var(--r-full);background:var(--card);border:1.5px solid var(--border);font-size:13px;color:var(--text-body);cursor:pointer;transition:all .2s var(--ease-soft);}
+  .ftab.sel{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d);font-weight:600;}
+  .ftab:active{transform:scale(.97);}
+
+  /* ---- hub / list rows ---- */
+  .hub-item{display:flex;align-items:center;gap:14px;background:var(--card-grad);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-sm);cursor:pointer;width:100%;text-align:left;border:none;transition:transform .2s var(--ease-soft),box-shadow .2s;}
+  .hub-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .hub-item:active{transform:scale(.985);}
+  .hub-ic{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:var(--primary-soft);}
+  .hub-mid{flex:1;}
+  .hub-mid .hn{font-size:14.5px;font-weight:700;color:var(--text-dark);}
+  .hub-mid .hd{font-size:12px;color:var(--text-gray);margin-top:2px;line-height:1.4;}
+
+  /* ---- emotion form ---- */
+  .emo-moods{display:flex;justify-content:space-between;gap:6px;}
+  .emo-mood{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 2px;border-radius:14px;background:var(--bg-soft);border:2px solid transparent;cursor:pointer;transition:transform .18s var(--ease-soft),border-color .2s,background .2s,box-shadow .2s;}
+  .emo-mood .e{font-size:26px;line-height:1;filter:grayscale(.3);opacity:.7;transition:transform .22s var(--ease-soft),filter .22s,opacity .22s;}
+  .emo-mood .l{font-size:11px;color:var(--text-gray);}
+  .emo-mood:active{transform:scale(.95);}
+  .emo-mood.sel{border-color:var(--primary);background:var(--primary-soft);box-shadow:var(--shadow-glow-primary);}
+  .emo-mood.sel .e{filter:none;opacity:1;transform:scale(1.14);}
+  .emo-mood.sel .l{color:var(--primary);font-weight:600;}
+  .tag-label{font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:8px;display:block;}
+  .tag-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .tag-chip{padding:8px 13px;border-radius:var(--r-full);background:var(--card);border:1.5px solid var(--border);font-size:12.5px;color:var(--text-body);cursor:pointer;transition:all .2s var(--ease-soft);}
+  .tag-chip:hover{background:var(--card-elev);}
+  .tag-chip.sel{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d);font-weight:600;box-shadow:var(--shadow-glow-primary);}
+  .tag-chip:active{transform:scale(.96);}
+
+  /* ---- history / records ---- */
+  .rec-item{background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:13px;box-shadow:var(--shadow-sm);margin-bottom:10px;cursor:pointer;transition:transform .18s var(--ease-soft),box-shadow .2s;}
+  .rec-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .rec-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .rec-time{font-size:11px;color:var(--text-gray);}
+  .rec-mood{font-size:14px;font-weight:700;color:var(--text-dark);}
+  .rec-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .rec-tag{font-size:11px;padding:2px 8px;border-radius:var(--r-full);background:var(--bg-soft);color:var(--text-gray);}
+  .rec-note{font-size:12.5px;color:var(--text-body);margin-top:6px;line-height:1.55;}
+  .rec-del{font-size:11px;color:var(--danger);background:none;border:none;cursor:pointer;padding:2px 0;font-weight:600;}
+  .rec-del:active{opacity:.6;}
+  .rec-detail .rd-row{margin-bottom:12px;}
+  .rec-detail .rd-k{font-size:12px;color:var(--text-gray);margin-bottom:4px;}
+  .rec-detail .rd-v{font-size:14px;color:var(--text-body);line-height:1.6;}
+  .muted-note{font-size:11.5px;color:var(--text-gray);background:var(--bg-soft);border-radius:12px;padding:10px 12px;line-height:1.55;display:flex;gap:8px;margin-top:12px;}
+  .muted-note svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;color:var(--warn);}
+
+  /* ---- grounding checklist ---- */
+  .ground-item{display:flex;align-items:flex-start;gap:12px;background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .18s var(--ease-soft),box-shadow .2s;}
+  .ground-item:active{transform:scale(.99);}
+  .ground-item input{width:22px;height:22px;margin-top:1px;accent-color:var(--primary);flex-shrink:0;cursor:pointer;}
+  .ground-item span{font-size:14px;color:var(--text-body);line-height:1.55;}
+  .ground-item span b{color:var(--text-dark);}
+
+  /* ---- whitenoise ---- */
+  .noise-list{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+  .noise-item{display:flex;align-items:center;gap:12px;background:var(--card-grad);border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .2s,background .2s,transform .18s var(--ease-soft);}
+  .noise-item:hover{background:var(--card-elev);}
+  .noise-item.sel{border-color:var(--calm);background:var(--calm-soft);box-shadow:var(--shadow-glow-calm);}
+  .noise-item:active{transform:scale(.98);}
+  .ni-ic{font-size:22px;}
+  .ni-name{font-size:14px;font-weight:600;color:var(--text-dark);flex:1;}
+  .ni-state{font-size:12px;color:var(--calm);font-weight:600;}
+  input[type=range].vol{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:var(--r-full);background:var(--bg-soft);outline:none;}
+  input[type=range].vol::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--primary);box-shadow:var(--shadow-glow-primary);cursor:pointer;}
+  input[type=range].vol::-moz-range-thumb{width:20px;height:20px;border:none;border-radius:50%;background:var(--primary);cursor:pointer;}
+
+  /* ---- self-help practice ---- */
+  .practice-meta{font-size:12.5px;color:var(--primary);font-weight:600;margin-bottom:4px;}
+  .practice-dur{font-size:12px;color:var(--text-gray);margin-bottom:14px;}
+  .practice-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+  .practice-step{display:flex;gap:12px;background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow-sm);}
+  .practice-step .ps-n{width:26px;height:26px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .practice-step .ps-t{font-size:13.5px;color:var(--text-body);line-height:1.6;}
+  .ph-input{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:14px;color:var(--text-dark);background:var(--card);font-family:inherit;resize:none;outline:none;min-height:70px;line-height:1.6;transition:border-color .2s,box-shadow .2s;}
+  .ph-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  .phrase-box{background:var(--primary-soft);border-radius:18px;padding:26px 20px;text-align:center;margin-bottom:14px;}
+  .phrase-box .pb-t{font-size:17px;font-weight:700;color:var(--text-dark);line-height:1.7;}
+  .phrase-box .pb-i{font-size:12px;color:var(--text-gray);margin-top:10px;}
+
+  /* ---- article detail / favorites ---- */
+  .art-search{width:100%;border:1.5px solid var(--border);border-radius:var(--r-full);padding:10px 14px;font-size:13px;color:var(--text-dark);background:var(--card);outline:none;margin-bottom:12px;transition:border-color .2s,box-shadow .2s;}
+  .art-search:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  .art-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .art-tag{font-size:11px;padding:3px 9px;border-radius:var(--r-full);background:var(--calm-soft);color:var(--calm);font-weight:600;}
+  .ref-actions{background:var(--bg-soft);border-radius:14px;padding:14px;margin:6px 0 14px;}
+  .ref-actions .ra-t{font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:8px;}
+  .ref-actions .ra-li{font-size:13px;color:var(--text-body);line-height:1.7;padding-left:16px;position:relative;}
+  .ref-actions .ra-li::before{content:"·";position:absolute;left:4px;color:var(--primary);font-weight:700;}
+  .fav-btn{display:inline-flex;align-items:center;gap:6px;background:var(--bg-soft);color:var(--text-body);border:1.5px solid var(--border);padding:11px 16px;border-radius:var(--r-full);font-size:14px;font-weight:600;cursor:pointer;width:100%;justify-content:center;transition:all .2s var(--ease-soft);}
+  .fav-btn.sel{background:var(--primary-soft);color:var(--primary-d);border-color:var(--primary);box-shadow:var(--shadow-glow-primary);}
+  .fav-btn:active{transform:scale(.97);}
+
+  /* ---- treehole detail / report ---- */
+  .th-detail-meta{font-size:11px;color:var(--text-gray);margin-bottom:14px;}
+  .th-detail-text{font-size:15px;color:var(--text-body);line-height:1.8;white-space:pre-wrap;word-break:break-word;}
+  .th-detail-actions{display:flex;gap:10px;margin-top:18px;}
+  .th-detail-actions button{flex:1;}
+  .th-hug-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--calm-soft);color:var(--calm);border:none;padding:11px;border-radius:var(--r-full);font-size:14px;font-weight:600;cursor:pointer;transition:transform .15s var(--ease-soft),opacity .2s;}
+  .th-hug-btn:active{transform:scale(.95);}
+  .th-report-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--bg-soft);color:var(--text-gray);border:1.5px solid var(--border);padding:11px;border-radius:var(--r-full);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s var(--ease-soft);}
+  .th-report-btn:active{transform:scale(.97);}
+  .report-opt{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:13px 14px;font-size:14px;color:var(--text-body);cursor:pointer;margin-bottom:10px;transition:all .2s var(--ease-soft);}
+  .report-opt:hover{background:var(--card-elev);}
+  .report-opt.sel{border-color:var(--danger);background:var(--danger-soft);color:#B91C1C;font-weight:600;}
+
+  /* ---- help guide / faq ---- */
+  .help-signal{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .help-signal .hs{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text-body);line-height:1.5;}
+  .help-signal .hs svg{width:18px;height:18px;flex-shrink:0;margin-top:1px;color:var(--warn);}
+  .help-big{width:100%;border:none;border-radius:var(--r-lg);padding:16px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:12px;transition:transform .18s var(--ease-soft),box-shadow .2s;}
+  .help-big.c-primary{background:var(--primary-grad);color:#fff;box-shadow:var(--shadow-glow-primary);}
+  .help-big.c-calm{background:var(--calm-grad);color:#fff;box-shadow:var(--shadow-glow-calm);}
+  .help-big:active{transform:scale(.985);}
+  .help-big svg{width:22px;height:22px;flex-shrink:0;}
+  .faq-item{background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
+  .faq-q{font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:6px;line-height:1.5;}
+  .faq-a{font-size:13px;color:var(--text-body);line-height:1.6;}
+  .hotline-card{display:flex;align-items:center;gap:12px;background:var(--card-grad);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px;box-shadow:var(--shadow-sm);text-decoration:none;}
+  .hotline-card .hc-ic{width:40px;height:40px;border-radius:12px;background:var(--danger-soft);color:var(--danger);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .hotline-card .hc-ic svg{width:20px;height:20px;}
+  .hotline-card .hc-mid{flex:1;}
+  .hotline-card .hc-n{font-size:14px;font-weight:700;color:var(--text-dark);}
+  .hotline-card .hc-num{font-size:13px;color:var(--danger);font-weight:700;}
+  .hotline-card .hc-note{font-size:11.5px;color:var(--text-gray);}
+  .hotline-card .hc-go{color:var(--danger);font-size:12px;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="screens">
+
+    <!-- ============ HOME ============ -->
+    <section class="ws-screen active" id="ws-home">
+      <div class="ws-statusbar">
+        <span class="sb-l">🔒 数据仅本机保存</span>
+        <span class="sb-r" id="sbDate"></span>
+      </div>
+      <div class="ws-header">
+        <button class="ws-back" id="backBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          返回校园圈
+        </button>
+        <div class="ws-htitle">心理咨询工作站</div>
+        <div class="ws-hsub">在这里，先照顾好你自己的心 🌿</div>
+      </div>
+
+      <div class="ws-body">
+        <!-- mood -->
+        <div class="card">
+          <div class="mood-q">今天，你的心情怎么样？</div>
+          <div class="mood-sub" id="moodDate"></div>
+          <div class="moods" id="moods"></div>
+          <div class="mood-msg" id="moodMsg"></div>
+        </div>
+
+        <!-- crisis -->
+        <div class="crisis">
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div style="flex:1">
+            <div class="ct">正处于危机中？你不是一个人</div>
+            <div class="cd">如果感到撑不下去，请立刻联系专业援助。24 小时都有人愿意听你说。</div>
+            <button class="cbtn" id="crisisBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              紧急求助热线
+            </button>
+          </div>
+        </div>
+
+        <!-- quick grid -->
+        <div class="quick-grid">
+          <button class="quick" data-open="relief"><span class="qi c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><span class="ql">即时舒缓</span><span class="qd">情绪急救</span></button>
+          <button class="quick" data-open="emotion"><span class="qi c-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="ql">情绪记录</span><span class="qd">标签记录</span></button>
+          <button class="quick" data-open="selfhelp"><span class="qi c-calm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h2a2 2 0 0 1 2 2v2h2a2 2 0 0 1 0 4h-2v2a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-4 0v-2H6a2 2 0 0 1-2-2v-2H2a2 2 0 0 1 0-4h2V6a2 2 0 0 1 2-2h2V2a2 2 0 0 1 4 0v2z"/></svg></span><span class="ql">自助练习</span><span class="qd">成套练习</span></button>
+          <button class="quick" data-open="treehole"><span class="qi c-pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="ql">匿名树洞</span><span class="qd">倾诉社区</span></button>
+          <button class="quick" data-open="articles"><span class="qi c-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span class="ql">心理阅读</span><span class="qd">科普文章</span></button>
+          <button class="quick" data-open="help"><span class="qi c-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span><span class="ql">求助指引</span><span class="qd">资源·FAQ</span></button>
+        </div>
+
+        <!-- tip -->
+        <div class="tip">
+          <span class="te">💡</span>
+          <div class="tt" id="dailyTip"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ASSESS ============ -->
+    <section class="ws-screen" id="ws-assess">
+      <div class="ws-pagehead">
+        <h2>心理测评</h2>
+        <p>用科学量表了解当下的状态，结果仅作参考</p>
+      </div>
+      <div class="ws-pad">
+        <div class="disclaimer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>测评工具为国际通用的筛查量表，<b>不能替代专业诊断</b>。若结果提示风险或你感到困扰，建议预约咨询师或拨打求助热线。</span>
+        </div>
+        <div id="scaleList"></div>
+      </div>
+    </section>
+
+    <!-- ============ BOOK ============ -->
+    <section class="ws-screen" id="ws-book">
+      <div class="ws-pagehead">
+        <h2>预约咨询</h2>
+        <p>与持证心理咨询师一对一，可匿名预约</p>
+      </div>
+      <div class="ws-pad">
+        <div id="counList"></div>
+      </div>
+    </section>
+
+    <!-- ============ MINE ============ -->
+    <section class="ws-screen" id="ws-mine">
+      <div class="ws-pagehead">
+        <h2>我的</h2>
+        <p>你的情绪记录与预约都在这里</p>
+      </div>
+      <div class="ws-pad">
+        <div class="stat-row">
+          <div class="stat"><div class="v" id="stMood">0</div><div class="l">打卡天数</div></div>
+          <div class="stat"><div class="v" id="stAppt">0</div><div class="l">预约次数</div></div>
+          <div class="stat"><div class="v" id="stTest">0</div><div class="l">测评次数</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><span class="t">近期心情</span><span class="more">近 14 天</span></div>
+          <div class="mood-chart" id="moodChart"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><span class="t">心理档案</span><span class="more">汇总入口</span></div>
+          <div id="hubMenu"></div>
+        </div>
+
+        <div class="disclaimer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>本工作站为校园心理健康辅助工具，所有记录仅保存在本设备。遇到紧急心理危机，请立即拨打 <b>12355</b> 青少年服务热线或 <b>400-161-9995</b> 全国心理援助热线。</span>
+        </div>
+
+        <div class="crisis">
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div style="flex:1">
+            <div class="ct">正处于危机中？你不是一个人</div>
+            <div class="cd">如果感到撑不下去，请立刻联系专业援助。24 小时都有人愿意听你说。</div>
+            <button class="cbtn" id="crisisBtnMine">紧急求助热线</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- SOS fab -->
+  <button class="sos-fab" id="sosFab" aria-label="紧急求助">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>SOS</span>
+  </button>
+
+  <!-- tab bar -->
+  <nav class="ws-tabbar" id="wsTabbar">
+    <div class="ws-tab active" data-target="ws-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>首页</span>
+    </div>
+    <div class="ws-tab" data-target="ws-assess">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>测评</span>
+    </div>
+    <div class="ws-tab" data-target="ws-book">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/></svg>
+      <span>预约</span>
+    </div>
+    <div class="ws-tab" data-target="ws-mine">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>我的</span>
+    </div>
+  </nav>
+
+  <!-- overlay -->
+  <div class="overlay" id="overlay">
+    <div class="sheet" id="sheet">
+      <div class="sheet-h">
+        <button class="sheet-back" id="sheetBack" aria-label="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span class="st" id="sheetTitle">标题</span>
+        <button class="sheet-close" id="sheetClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="sheet-body" id="sheetBody"></div>
+    </div>
+  </div>
+
+  <div class="confirm-ov" id="confirmOv">
+    <div class="confirm-card">
+      <div class="confirm-title" id="confirmTitle">请确认</div>
+      <div class="confirm-msg" id="confirmMsg"></div>
+      <div class="confirm-btns">
+        <button class="btn-ghost" id="confirmNo">取消</button>
+        <button class="btn-primary" id="confirmYes">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- utils ---------- */
+  var $ = function(s,r){return (r||document).querySelector(s);};
+  var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  function todayKey(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+  function pad(n){return n<10?'0'+n:''+n;}
+  function getStore(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){return def;}}
+  function setStore(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+  function showToast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1600);}
+
+  /* ---------- status bar time ---------- */
+  (function(){
+    function tick(){var el=$('#sbTime');if(!el)return;el.textContent=new Date().getHours()+':'+pad(new Date().getMinutes());}
+    tick();setInterval(tick,30000);
+  })();
+
+  /* ---------- tab switching ---------- */
+  var tabs=$$('.ws-tab'), screens={};
+  ['ws-home','ws-assess','ws-book','ws-mine'].forEach(function(id){screens[id]=$('#'+id);});
+  function showWS(id){
+    Object.keys(screens).forEach(function(k){screens[k].classList.toggle('active',k===id);});
+    tabs.forEach(function(t){t.classList.toggle('active',t.dataset.target===id);});
+    if(id==='ws-mine') renderMine();
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){showWS(t.dataset.target);});});
+
+  /* ---------- back to campus app ---------- */
+  $('#backBtn').addEventListener('click',function(){window.location.href='../index.html';});
+
+  /* ---------- mood data ---------- */
+  var MOODS=[
+    {s:1,e:'😞',l:'很糟'},
+    {s:2,e:'😔',l:'低落'},
+    {s:3,e:'😐',l:'平常'},
+    {s:4,e:'🙂',l:'不错'},
+    {s:5,e:'😄',l:'超棒'}
+  ];
+  var MOOD_MSGS={
+    1:'抱抱你，今天辛苦了。要不要试试「放松练习」？',
+    2:'低落也没关系，记得你并不孤单。',
+    3:'平稳的一天，也值得被看见。',
+    4:'不错呀，保持这份轻盈～',
+    5:'太棒了！把这份好心情分享出去吧 🎉'
+  };
+  var moods=getStore('ws_moods',{});
+  function renderMoods(){
+    var box=$('#moods');box.innerHTML='';
+    var tk=todayKey();
+    MOODS.forEach(function(m){
+      var b=document.createElement('div');
+      b.className='mood'+(moods[tk]===m.s?' sel':'');
+      b.innerHTML='<span class="e">'+m.e+'</span><span class="l">'+m.l+'</span>';
+      b.addEventListener('click',function(){
+        moods[tk]=m.s;setStore('ws_moods',moods);
+        $$('.mood',box).forEach(function(x){x.classList.remove('sel');});
+        b.classList.add('sel');
+        $('#moodMsg').textContent=MOOD_MSGS[m.s];
+      });
+      box.appendChild(b);
+    });
+    var d=new Date();
+    $('#moodDate').textContent=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()]+' · '+ (d.getMonth()+1)+'月'+d.getDate()+'日';
+    if(moods[tk]) $('#moodMsg').textContent=MOOD_MSGS[moods[tk]];
+  }
+  renderMoods();
+
+  /* ---------- daily tip ---------- */
+  var TIPS=[
+    '每天花 2 分钟做深呼吸，能有效降低焦虑水平。',
+    '把「我必须完美」换成「我已尽力」，压力会小很多。',
+    '睡前 1 小时远离屏幕，睡眠质量会更好。',
+    '和信任的人聊 10 分钟，比独自消化情绪更有用。',
+    '运动 20 分钟，大脑会自然分泌让人平静的内啡肽。',
+    '允许自己有「什么都不想做」的时刻，那不是懒惰。',
+    '把烦恼写下来，往往写着写着就清晰了。'
+  ];
+  $('#dailyTip').innerHTML='<b>今日小贴士：</b>'+TIPS[new Date().getDate()%TIPS.length];
+  var sb=$('#sbDate');if(sb){var nd=new Date();sb.textContent=(nd.getMonth()+1)+'月'+nd.getDate()+'日 · '+['周日','周一','周二','周三','周四','周五','周六'][nd.getDay()];}
+
+  /* ---------- quick entries ---------- */
+  var QUICK={relief:openRelief,emotion:openEmotion,selfhelp:openSelfHelp,treehole:openTreehole,articles:openArticles,help:openHelp};
+  $$('.quick').forEach(function(q){
+    q.addEventListener('click',function(){
+      if(q.dataset.go) showWS(q.dataset.go);
+      else if(q.dataset.open&&QUICK[q.dataset.open]) QUICK[q.dataset.open]();
+    });
+  });
+
+  /* ---------- scales ---------- */
+  var SCALES={
+    phq9:{
+      name:'PHQ-9 抑郁自评',short:'抑郁症状筛查 · 9 题',
+      desc:'在过去两周内，您有多少时间受到以下问题的困扰？',
+      options:['完全没有','好几天','一半以上的天数','几乎每天'],
+      items:[
+        '做事时提不起劲或没有兴趣',
+        '感到心情低落、沮丧或绝望',
+        '入睡困难、睡不安稳或睡眠过多',
+        '感觉疲倦或没有活力',
+        '食欲不振或吃太多',
+        '觉得自己很糟，或觉得自己很失败，或让自己、家人失望',
+        '对事情专注有困难，例如阅读或看电视时',
+        '行动或说话缓慢到别人已经察觉？或正好相反——坐立不安、动来动去',
+        '有不如死掉或用某种方式伤害自己的念头'
+      ],
+      suicideIndex:8,
+      max:27,
+      bands:[
+        {max:4,label:'无明显抑郁',color:'#10B981',adv:'目前状态良好。继续保持规律的作息与社交，就是最好的养护。'},
+        {max:9,label:'轻度抑郁',color:'#F59E0B',adv:'出现了一些轻度信号。建议多留意情绪变化，尝试运动、倾诉与放松练习；若持续两周以上请考虑预约咨询。'},
+        {max:14,label:'中度抑郁',color:'#F97316',adv:'建议预约学校心理咨询师进一步评估，并告诉一位你信任的人。你不需要独自承受。'},
+        {max:19,label:'中重度抑郁',color:'#EF4444',adv:'建议尽快寻求专业帮助（心理咨询师或精神科）。请拨打求助热线，或联系身边可信任的人陪伴你。'},
+        {max:27,label:'重度抑郁',color:'#DC2626',adv:'强烈建议立即寻求专业医疗帮助。如果已有伤害自己的念头，请立刻拨打 12355 或 400-161-9995。'}
+      ]
+    },
+    gad7:{
+      name:'GAD-7 焦虑自评',short:'广泛性焦虑 · 7 题',
+      desc:'在过去两周内，您有多少时间受到以下问题的困扰？',
+      options:['完全没有','好几天','一半以上的天数','几乎每天'],
+      items:[
+        '感到紧张、焦虑或急切',
+        '不能停止或控制担忧',
+        '对各种各样的事情过度担忧',
+        '很难放松下来',
+        '由于不安而无法静坐',
+        '变得容易烦恼或易怒',
+        '感到似乎将有可怕的事情发生而害怕'
+      ],
+      suicideIndex:-1,
+      max:21,
+      bands:[
+        {max:4,label:'无明显焦虑',color:'#10B981',adv:'目前焦虑水平很低。保持节奏，照顾好自己。'},
+        {max:9,label:'轻度焦虑',color:'#F59E0B',adv:'有轻度焦虑信号。尝试呼吸放松、规律运动；若影响生活请预约咨询。'},
+        {max:14,label:'中度焦虑',color:'#F97316',adv:'建议预约咨询师，学习情绪调节方法。告诉信任的人你的感受会有所帮助。'},
+        {max:21,label:'重度焦虑',color:'#EF4444',adv:'建议尽快寻求专业帮助。焦虑是可以被有效干预的，你值得被好好对待。'}
+      ]
+    }
+  };
+  var answers={}, currentScale=null;
+  function renderScaleList(){
+    var box=$('#scaleList');box.innerHTML='';
+    var tests=getStore('ws_tests',[]);
+    Object.keys(SCALES).forEach(function(k){
+      var sc=SCALES[k];
+      var last='';
+      for(var i=tests.length-1;i>=0;i--){if(tests[i].scale===k){last=tests[i].date+' · '+tests[i].score+'分';break;}}
+      var el=document.createElement('button');
+      el.className='scale-item';
+      el.innerHTML=
+        '<span class="scale-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>'+
+        '<span class="scale-mid"><div class="sn">'+sc.name+'</div><div class="sd">'+sc.short+'</div></span>'+
+        '<span class="scale-right"><span class="scale-tag">免费</span>'+(last?'<span class="scale-last">'+last+'</span>':'')+'</span>'+
+        '<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>';
+      el.addEventListener('click',function(){openScale(k);});
+      box.appendChild(el);
+    });
+  }
+  renderScaleList();
+
+  function openScale(key){
+    currentScale=key;answers={};
+    var sc=SCALES[key];
+    var html='<div class="q-intro">'+sc.desc+'</div>';
+    sc.items.forEach(function(it,idx){
+      html+='<div class="q-item"><div class="qi-t">'+(idx+1)+'. '+it+'</div><div class="q-opts">';
+      sc.options.forEach(function(op,vi){
+        html+='<div class="q-opt" data-q="'+idx+'" data-v="'+vi+'"><span class="dot"></span>'+op+'</div>';
+      });
+      html+='</div></div>';
+    });
+    html+='<div style="height:10px"></div><button class="btn-primary" id="submitScale" disabled>提交并查看结果</button>';
+    openSheet(sc.name,html);
+    $$('.q-opt').forEach(function(opt){
+      opt.addEventListener('click',function(){
+        var q=opt.dataset.q;
+        $$('.q-opt[data-q="'+q+'"]').forEach(function(x){x.classList.remove('sel');});
+        opt.classList.add('sel');
+        answers[q]=parseInt(opt.dataset.v,10);
+        var done=Object.keys(answers).length===sc.items.length;
+        $('#submitScale').disabled=!done;
+      });
+    });
+    $('#submitScale').addEventListener('click',function(){submitScale(key);});
+  }
+  function submitScale(key){
+    var sc=SCALES[key],total=0;
+    sc.items.forEach(function(_,i){total+=(answers[i]||0);});
+    var band=sc.bands[sc.bands.length-1];
+    for(var i=0;i<sc.bands.length;i++){if(total<=sc.bands[i].max){band=sc.bands[i];break;}}
+    var tests=getStore('ws_tests',[]);
+    tests.push({scale:key,score:total,date:todayKey()});
+    setStore('ws_tests',tests);
+    renderScaleList();
+    var html='<div class="res-score"><span class="num">'+total+'</span><span class="den"> / '+sc.max+'</span></div>'+
+      '<div class="res-band" style="color:'+band.color+'">'+band.label+'</div>'+
+      '<div class="res-bar"><i style="width:'+Math.round(total/sc.max*100)+'%;background:'+band.color+'"></i></div>'+
+      '<div class="res-adv"><b>结果说明</b><br>'+band.adv+'</div>';
+    if(sc.suicideIndex>=0 && (answers[sc.suicideIndex]||0)>0){
+      html+='<div class="res-crisis"><b>⚠ 需要特别重视</b>你提到有过伤害自己的念头。这非常值得被认真对待——请现在就联系专业人员：拨打 <b>12355</b>（青少年服务热线）或 <b>400-161-9995</b>（全国心理援助热线），或前往最近医院急诊。你很重要。</div>';
+    }
+    html+='<div style="height:14px"></div><button class="btn-primary" id="closeRes">我知道了</button>';
+    openSheet('测评结果',html,true);
+    $('#closeRes').addEventListener('click',closeSheet);
+  }
+
+  /* ---------- counselors ---------- */
+  var COUNSELORS=[
+    {id:'c1',name:'林清',title:'注册心理师',spec:'情绪困扰 · 学业压力',rate:'4.9',sessions:'320+',color:'#6366F1',bio:'擅长认知行为疗法，温柔而有边界感。',slots:['周一 14:00','周二 10:00','周四 15:30','周五 09:30']},
+    {id:'c2',name:'苏阳',title:'国家二级咨询师',spec:'人际关系 · 原生家庭',rate:'4.8',sessions:'260+',color:'#14B8A6',bio:'专注青年人际关系议题，倾听而不评判。',slots:['周三 13:00','周三 16:00','周六 10:30','周日 14:00']},
+    {id:'c3',name:'周岚',title:'临床心理学硕士',spec:'焦虑 · 睡眠 · 危机干预',rate:'5.0',sessions:'410+',color:'#8B5CF6',bio:'有精神科见习背景，能快速评估并给出方向。',slots:['周一 09:00','周二 14:30','周五 16:00','周六 15:00']}
+  ];
+  function renderCounList(){
+    var box=$('#counList');box.innerHTML='';
+    COUNSELORS.forEach(function(c){
+      var el=document.createElement('button');
+      el.className='coun';
+      el.innerHTML='<span class="ava" style="background:'+c.color+'">'+c.name.charAt(0)+'</span>'+
+        '<span class="coun-mid"><div class="cn">'+c.name+' <span style="font-size:11px;color:var(--text-gray);font-weight:500">'+c.title+'</span></div>'+
+        '<div class="ct">'+c.spec+'</div><div class="cs">'+c.bio+'</div><div class="crate">★ '+c.rate+' · 已服务 '+c.sessions+' 人</div></span>'+
+        '<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>';
+      el.addEventListener('click',function(){openBook(c);});
+      box.appendChild(el);
+    });
+  }
+  renderCounList();
+
+  var bookState={coun:null,date:null,slot:null,anon:false};
+  function next7Dates(){
+    var arr=[],names=['周日','周一','周二','周三','周四','周五','周六'];
+    for(var i=0;i<7;i++){var d=new Date();d.setDate(d.getDate()+i);arr.push({key:d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),label:(i===0?'今天':names[d.getDay()])+' '+ (d.getMonth()+1)+'/'+d.getDate()});}
+    return arr;
+  }
+  function openBook(c){
+    bookState={coun:c,date:null,slot:null,anon:false};
+    var dates=next7Dates();
+    var html='<div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">'+
+      '<span class="ava" style="background:'+c.color+';width:48px;height:48px">'+c.name.charAt(0)+'</span>'+
+      '<div><div style="font-size:15px;font-weight:700;color:var(--text-dark)">'+c.name+' · '+c.title+'</div><div style="font-size:12px;color:var(--primary)">'+c.spec+'</div></div></div>';
+    html+='<div class="field"><label>选择日期</label><div class="chips" id="dateChips">';
+    dates.forEach(function(d,i){html+='<div class="chip" data-d="'+d.key+'">'+d.label+'</div>';});
+    html+='</div></div>';
+    html+='<div class="field"><label>选择时段</label><div class="chips" id="slotChips">';
+    c.slots.forEach(function(s){html+='<div class="chip" data-s="'+s+'">'+s+'</div>';});
+    html+='</div></div>';
+    html+='<div class="field"><label>想聊些什么（选填）</label><textarea class="inp" id="bookReason" placeholder="可简单描述你的困扰，咨询师会提前了解。匿名预约也可不填。"></textarea></div>';
+    html+='<div class="toggle-row"><span class="tl">匿名预约（咨询师看不到你的姓名）</span><div class="switch" id="anonSwitch"><i></i></div></div>';
+    html+='<div style="height:10px"></div><button class="btn-primary" id="submitBook" disabled>确认预约</button>';
+    openSheet('预约 '+c.name,html);
+
+    $$('#dateChips .chip').forEach(function(ch){ch.addEventListener('click',function(){$$('#dateChips .chip').forEach(function(x){x.classList.remove('sel');});ch.classList.add('sel');bookState.date=ch.dataset.d;checkBook();});});
+    $$('#slotChips .chip').forEach(function(ch){ch.addEventListener('click',function(){$$('#slotChips .chip').forEach(function(x){x.classList.remove('sel');});ch.classList.add('sel');bookState.slot=ch.dataset.s;checkBook();});});
+    $('#anonSwitch').addEventListener('click',function(){bookState.anon=!bookState.anon;this.classList.toggle('on',bookState.anon);});
+    $('#submitBook').addEventListener('click',function(){
+      var appts=getStore('ws_appts',[]);
+      appts.push({coun:c.name,date:bookState.date,slot:bookState.slot,anon:bookState.anon,reason:$('#bookReason').value,status:'待确认',key:todayKey()+'-'+Date.now()});
+      setStore('ws_appts',appts);
+      var done='<div style="text-align:center;padding:14px 0">'+
+        '<div style="width:64px;height:64px;border-radius:50%;background:var(--calm-soft);color:var(--calm);display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'+
+        '<div style="font-size:17px;font-weight:700;color:var(--text-dark)">预约成功</div>'+
+        '<div style="font-size:13px;color:var(--text-gray);margin-top:8px">'+c.name+' · '+bookState.date+' '+bookState.slot+'<br>'+(bookState.anon?'匿名预约':'')+'</div></div>'+
+        '<div style="height:14px"></div><button class="btn-primary" id="bookDone">完成</button>';
+      openSheet('预约成功',done,true);
+      $('#bookDone').addEventListener('click',function(){closeSheet();showWS('ws-mine');});
+    });
+  }
+  function checkBook(){$('#submitBook').disabled=!(bookState.date&&bookState.slot);}
+
+  /* ---------- mine (心理档案 hub) ---------- */
+  function renderMine(){
+    var moods=getStore('ws_moods',{});
+    var appts=getStore('ws_appts',[]);
+    var tests=getStore('ws_tests',[]);
+    $('#stMood').textContent=Object.keys(moods).length;
+    $('#stAppt').textContent=appts.length;
+    $('#stTest').textContent=tests.length;
+
+    // mood chart last 14 days
+    var chart=$('#moodChart');chart.innerHTML='';
+    var names=['日','一','二','三','四','五','六'];
+    for(var i=13;i>=0;i--){
+      var d=new Date();d.setDate(d.getDate()-i);
+      var key=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+      var v=moods[key]||0;
+      var bar=document.createElement('div');bar.className='mc-bar';
+      var h=v?Math.max(8,v/5*100):4;
+      bar.innerHTML='<div class="b" style="height:'+h+'%;background:'+(v?(v>=4?'var(--calm)':v===3?'var(--primary)':'#FCA5A5'):'var(--bg-soft)')+'"></div><div class="d">'+(v?MOODS[v-1].e:names[d.getDay()])+'</div>';
+      chart.appendChild(bar);
+    }
+
+    // 心理档案 hub
+    var hub=$('#hubMenu');
+    var items=[
+      {ic:'📝',n:'情绪记录',d:'记录与回顾你的情绪',go:function(){navTo(renderEmotion);navPush(renderEmotionHistory);}},
+      {ic:'🧩',n:'练习记录',d:'舒缓与自助练习历史',go:function(){navTo(renderPracticeRecords);}},
+      {ic:'📊',n:'状态参考',d:'PHQ-9 / GAD-7 测评',go:function(){navTo(renderScaleSheet);}},
+      {ic:'🌳',n:'我的树洞发布',d:'我匿名发布的内容',go:function(){navTo(renderTreeholeMine);}},
+      {ic:'⭐',n:'收藏阅读文章',d:'已收藏的科普文章',go:function(){navTo(renderArticleFav);}},
+      {ic:'🆘',n:'求助资源',d:'热线与校园咨询',go:function(){navTo(renderHelp);}},
+      {ic:'🗑️',n:'数据管理',d:'清空全部本地记录',go:clearAllData}
+    ];
+    hub.innerHTML='';
+    items.forEach(function(it){
+      var el=document.createElement('button');el.className='hub-item';
+      el.innerHTML='<span class="hub-ic">'+it.ic+'</span><span class="hub-mid"><div class="hn">'+it.n+'</div><div class="hd">'+it.d+'</div></span><span class="chev">›</span>';
+      el.addEventListener('click',it.go);
+      hub.appendChild(el);
+    });
+  }
+
+  /* ---------- 数据管理 ---------- */
+  function clearAllData(){
+    confirmDialog('清空全部本地记录','此操作将删除本机保存的全部情绪记录、练习记录、树洞发布、收藏文章与测评报告，且无法恢复。',function(){
+      ['ws_moods','ws_mood_records','ws_practice_records','ws_treehole_posts','ws_article_fav','ws_tests','ws_gratitude'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+      showToast('已全部清空');
+      renderMine();
+    },{yesText:'确认清空',danger:true});
+  }
+
+  /* ---------- SOS ---------- */
+  var HOTLINES=[
+    {name:'青少年服务热线',num:'12355',note:'共青团 · 全天'},
+    {name:'全国心理援助热线',num:'400-161-9995',note:'24 小时'},
+    {name:'北京心理危机干预中心',num:'010-82951332',note:'24 小时'},
+    {name:'希望24热线',num:'400-161-9995',note:'生命教育与危机干预'}
+  ];
+  function openSOS(){
+    var html='<div style="background:var(--danger-soft);border-radius:14px;padding:14px;margin-bottom:14px;font-size:13px;color:#B91C1C;line-height:1.6"><b>如果你正想伤害自己，请现在就拨打下面的电话。</b><br>总有人愿意陪你度过这一刻，你值得被帮助。</div>';
+    HOTLINES.forEach(function(h){
+      html+='<a class="coun" href="tel:'+h.num.replace(/-/g,'')+'" style="text-decoration:none;margin-bottom:10px">'+
+        '<span class="ava" style="background:var(--danger)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>'+
+        '<span class="coun-mid"><div class="cn" style="color:var(--text-dark)">'+h.name+'</div><div class="cd" style="font-size:12px;color:var(--danger);font-weight:700">'+h.num+'</div><div class="cs">'+h.note+'</div></span>'+
+        '<span class="chev" style="color:var(--danger);align-self:center">拨打 ›</span></a>';
+    });
+    html+='<div style="height:6px"></div><button class="btn-ghost" id="sosClose">稍后再说</button>';
+    openSheet('紧急求助',html,true);
+    $('#sosClose').addEventListener('click',closeSheet);
+  }
+  $('#sosFab').addEventListener('click',openSOS);
+  $('#crisisBtn').addEventListener('click',openSOS);
+  $('#crisisBtnMine').addEventListener('click',openSOS);
+
+  /* ---------- articles ---------- */
+  var ARTICLES=[
+    {h:'焦虑不是敌人：认识你的「警报系统」',ex:'焦虑本质是身体的保护机制，理解它才能与之共处。',
+     body:['焦虑其实是人类进化留下的「警报系统」。当大脑检测到潜在威胁，身体会加速心跳、绷紧肌肉，为「战斗或逃跑」做准备。它在绝大多数时候是在保护你。',
+           '问题不在于焦虑本身，而在于它「误报」得太频繁——考试、社交、未知，都会触发同一套警报。',
+           '可以尝试：① 给焦虑命名（「这是我的警报响了」），把它和「真实的危险」分开；② 用呼吸把身体信号降下来；③ 问自己「此刻我最需要什么」。当焦虑被看见，它的音量往往会小下来。']},
+    {h:'为什么「睡不好」会放大所有情绪',ex:'睡眠与情绪调节直接相关，熬夜是在透支心理韧性。',
+     body:['研究发现，睡眠不足会削弱大脑前额叶对情绪的调节能力，让人更容易烦躁、敏感、悲观。',
+           '一个简单的改善：固定起床时间比固定入睡时间更重要；睡前一小时远离强光屏幕；卧室只用来睡觉。',
+           '如果长期失眠并伴随情绪低落，建议把它作为信号，主动寻求咨询或医疗帮助，而不是硬撑。']},
+    {h:'求助是一种力量，不是软弱',ex:'承认需要帮助，往往是改变的第一步。',
+     body:['很多人把「求助」等同于「无能」，但事实恰恰相反——承认困境、主动寻找资源，是成熟与勇气的表现。',
+           '你可以求助的对象包括：信任的朋友或家人、学校心理咨询师、热线、精神科医师。不同的困扰，适合不同的支持。',
+           '如果不知道从哪开始，先从「和一个人说出真实感受」开始。说出来，问题就已经轻了一半。']},
+    {h:'给「内耗」按下暂停键',ex:'反复揣摩未发生的事，是最隐蔽的情绪消耗。',
+     body:['内耗常常表现为：反复回想说过的话、预演还没发生的对话、在「做与不做」之间无限循环。',
+           '一个实用方法叫「10-10-10」：这件事在 10 天后、10 个月后、10 年后还重要吗？多数内耗在时间里会被稀释。',
+           '另一个是「写下再行动」：把脑中的杂念写下来，你会发现真正需要做的往往只有一两件。']}
+  ];
+  function articleFavList(){return getStore('ws_article_fav',[]);}
+  function articleIsFav(i){return articleFavList().indexOf(i)>=0;}
+  function articleToggleFav(i){
+    var f=articleFavList(),k=f.indexOf(i);
+    if(k>=0)f.splice(k,1);else f.push(i);
+    setStore('ws_article_fav',f);
+  }
+  function openArticles(){navTo(renderArticles);}
+  function renderArticles(){
+    sheetTitle.textContent='心理阅读';
+    var fav=articleFavList();
+    sheetBody.innerHTML=
+      '<input class="art-search" id="artSearch" placeholder="搜索文章标题关键词…">'+
+      '<div class="seg">点击文章开始阅读。所有文章仅作科普参考。</div>'+
+      '<div id="artListWrap"></div>'+
+      '<div style="height:10px"></div><button class="fav-btn" id="artFavBtn">'+(fav.length?'★ 我的收藏 ('+fav.length+')':'☆ 我的收藏')+'</button>';
+    function paint(){
+      var q=($('#artSearch').value||'').trim().toLowerCase();
+      var wrap=$('#artListWrap');wrap.innerHTML='';
+      ARTICLES.forEach(function(a,idx){
+        if(q && a.h.toLowerCase().indexOf(q)<0 && a.ex.toLowerCase().indexOf(q)<0) return;
+        var el=document.createElement('div');el.className='art';el.dataset.a=idx;
+        el.innerHTML='<div class="ah">'+a.h+'</div><div class="aex">'+a.ex+'</div>';
+        el.addEventListener('click',function(){navPush(function(){renderArticleDetail(idx);});});
+        wrap.appendChild(el);
+      });
+      if(!wrap.children.length) wrap.innerHTML='<div class="empty">没有匹配的文章</div>';
+    }
+    paint();
+    $('#artSearch').addEventListener('input',paint);
+    $('#artFavBtn').addEventListener('click',function(){navPush(renderArticleFav);});
+  }
+  function renderArticleDetail(idx){
+    var a=ARTICLES[idx],fav=articleIsFav(idx);
+    sheetTitle.textContent='心理阅读';
+    var html='<div style="font-size:17px;font-weight:800;color:var(--text-dark);margin-bottom:6px;line-height:1.5">'+a.h+'</div>'+
+      '<div class="art-tags"><span class="art-tag">心理科普</span><span class="art-tag">自我照顾</span></div>'+
+      '<div class="art-full">';
+    a.body.forEach(function(p){html+='<p>'+p+'</p>';});
+    html+='</div>'+
+      '<div class="ref-actions"><div class="ra-t">👉 参考小行动</div>'+
+      '<div class="ra-li">今天做一件 5 分钟放松的小事</div>'+
+      '<div class="ra-li">把烦恼简单地写下来</div></div>'+
+      '<button class="fav-btn'+(fav?' sel':'')+'" id="favToggle">'+(fav?'★ 已收藏':'☆ 收藏本文')+'</button>'+
+      '<div class="muted-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>本文仅作科普参考，不能替代专业心理咨询。</span></div>';
+    sheetBody.innerHTML=html;
+    $('#favToggle').addEventListener('click',function(){
+      articleToggleFav(idx);var f=articleIsFav(idx);
+      this.classList.toggle('sel',f);this.textContent=f?'★ 已收藏':'☆ 收藏本文';
+      showToast(f?'已收藏到「我的收藏」':'已取消收藏');
+    });
+  }
+  function renderArticleFav(){
+    sheetTitle.textContent='我的收藏';
+    var fav=articleFavList();
+    var html='<div class="seg">收藏的文章会保存在本机，可在「我的心理档案」再次查看。</div>';
+    if(!fav.length){
+      html+='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>还没有收藏的文章</div>';
+    }else{
+      fav.slice().reverse().forEach(function(i){
+        var a=ARTICLES[i];if(!a)return;
+        html+='<div class="art" data-a="'+i+'"><div class="ah">'+a.h+'</div><div class="aex">'+a.ex+'</div></div>';
+      });
+    }
+    sheetBody.innerHTML=html;
+    $$('.art',sheetBody).forEach(function(el){el.addEventListener('click',function(){navPush(function(){renderArticleDetail(parseInt(el.dataset.a,10));});});});
+  }
+
+  /* ---------- treehole ---------- */
+  var THKEY='ws_treehole_posts';
+  function relTime(ts){
+    var d=Date.now()-ts,day=86400000;
+    if(d<60000)return '刚刚';
+    if(d<3600000)return Math.floor(d/60000)+'分钟前';
+    if(d<day)return Math.floor(d/3600000)+'小时前';
+    if(d<7*day)return Math.floor(d/day)+'天前';
+    var dt=new Date(ts);return (dt.getMonth()+1)+'月'+dt.getDate()+'日';
+  }
+  function thPosts(){return getStore(THKEY,null);}
+  function thSave(p){setStore(THKEY,p);}
+  function seedTreehole(){
+    if(getStore(THKEY,null)!==null)return;
+    var now=Date.now(),day=86400000;
+    thSave([
+      {id:'th_seed1',text:'期末周快被ddl淹没了，但刚才在食堂遇到一只猫，心情好了很多。想告诉大家，累的时候抬头看看周围也挺好。',ts:now-2*day,hugCount:12,isMine:false,reportMarked:false},
+      {id:'th_seed2',text:'最近和室友有点小矛盾，不知道怎么开口。有没有人也这样，明明很在意却越躲越远？',ts:now-4*day,hugCount:8,isMine:false,reportMarked:false}
+    ]);
+  }
+  function openTreehole(){navTo(renderTreehole);}
+  function renderTreehole(){
+    sheetTitle.textContent='匿名树洞';
+    var posts=thPosts();
+    sheetBody.innerHTML=
+      '<textarea class="th-input" id="thInput" placeholder="把此刻想说的话写下来吧，这里匿名、安全，没人知道你是谁。"></textarea>'+
+      '<div style="height:10px"></div><button class="btn-primary" id="thSend">匿名发布</button>'+
+      '<div class="seg" style="margin-top:14px">最近的树洞（仅存于本机）</div>'+
+      '<div class="th-list" id="thList"></div>'+
+      '<div style="height:6px"></div><button class="btn-ghost" id="thMine">我发布的</button>';
+    paint();
+    function paint(){
+      var list=$('#thList');list.innerHTML='';
+      if(!posts.length){list.innerHTML='<div class="empty">还没有人留言，做第一个倾诉的人吧 🌱</div>';return;}
+      posts.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(p){
+        var el=document.createElement('div');el.className='th-item';
+        el.innerHTML='<div class="th-meta"><span>匿名 · '+relTime(p.ts)+'</span>'+(p.reportMarked?'<span style="color:var(--danger)">已举报</span>':'')+'</div><div class="th-txt">'+escapeHtml(p.text)+'</div><button class="th-hug" data-id="'+p.id+'">🤗 抱抱 '+(p.hugCount||0)+'</button>';
+        el.addEventListener('click',function(e){if(e.target.classList.contains('th-hug'))return;navPush(function(){renderTreeholeDetail(p.id);});});
+        list.appendChild(el);
+      });
+      $$('.th-hug',list).forEach(function(b){b.addEventListener('click',function(ev){
+        ev.stopPropagation();var id=b.dataset.id;
+        posts=thPosts();posts=posts.map(function(x){if(x.id===id)x.hugCount=(x.hugCount||0)+1;return x;});thSave(posts);paint();
+      });});
+    }
+    $('#thSend').addEventListener('click',function(){
+      var v=$('#thInput').value.trim();
+      if(!v){showToast('写点什么再发布吧');return;}
+      posts=thPosts();posts.push({id:'th'+Date.now(),text:v,ts:Date.now(),hugCount:0,isMine:true,reportMarked:false});thSave(posts);
+      $('#thInput').value='';paint();showToast('已发布到树洞 🌿');
+    });
+    $('#thMine').addEventListener('click',function(){navPush(renderTreeholeMine);});
+  }
+  function findPost(id){var p=thPosts();for(var i=0;i<p.length;i++)if(p[i].id===id)return p[i];return null;}
+  function renderTreeholeDetail(id){
+    var p=findPost(id);if(!p){navBack();return;}
+    sheetTitle.textContent='树洞详情';
+    sheetBody.innerHTML=
+      '<div class="th-detail-meta">匿名 · '+relTime(p.ts)+'</div>'+
+      '<div class="th-detail-text">'+escapeHtml(p.text)+'</div>'+
+      '<div class="th-detail-actions">'+
+        '<button class="th-hug-btn" id="thHug">🤗 共情 '+(p.hugCount||0)+'</button>'+
+        '<button class="th-report-btn" id="thReport">⚠ 举报内容</button>'+
+      '</div>'+
+      '<div class="muted-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>树洞无评论功能，仅支持共情与举报，以维持安全边界、防止网暴。</span></div>';
+    $('#thHug').addEventListener('click',function(){
+      var posts=thPosts();posts=posts.map(function(x){if(x.id===id)x.hugCount=(x.hugCount||0)+1;return x;});thSave(posts);
+      p.hugCount=(p.hugCount||0)+1;this.textContent='🤗 共情 '+p.hugCount;showToast('已送上共情 🤗');
+    });
+    $('#thReport').addEventListener('click',function(){navPush(function(){renderReport(id);});});
+  }
+  function renderReport(id){
+    sheetTitle.textContent='举报内容';
+    var reasons=['人身攻击','泄露隐私','危险内容','广告'];
+    var html='<div class="seg">请选择举报原因（仅在本机标记，后续接入后端后上报）。</div>';
+    reasons.forEach(function(r){html+='<button class="report-opt" data-r="'+r+'">'+r+'</button>';});
+    html+='<div style="height:10px"></div><button class="btn-ghost" id="repCancel">取消</button>';
+    sheetBody.innerHTML=html;
+    $$('.report-opt').forEach(function(b){b.addEventListener('click',function(){
+      var posts=thPosts();posts=posts.map(function(x){if(x.id===id)x.reportMarked=true;return x;});thSave(posts);
+      showToast('已标记，感谢你的反馈');navBack();
+    });});
+    $('#repCancel').addEventListener('click',navBack);
+  }
+  function renderTreeholeMine(){
+    sheetTitle.textContent='我发布的树洞';
+    var posts=thPosts().filter(function(x){return x.isMine;}).sort(function(a,b){return b.ts-a.ts;});
+    var html='<div class="seg">删除后本机数据清除，不可恢复。</div>';
+    if(!posts.length){html+='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>还没有发布过树洞</div>';}
+    else{
+      posts.forEach(function(p){
+        html+='<div class="rec-item" data-id="'+p.id+'"><div class="rec-top"><span class="rec-time">'+relTime(p.ts)+' · 🤗 '+(p.hugCount||0)+'</span></div><div class="rec-note">'+escapeHtml(p.text)+'</div>'+
+          '<div style="margin-top:8px;display:flex;gap:10px"><button class="rec-del" data-view="'+p.id+'">查看详情</button><button class="rec-del" data-del="'+p.id+'">删除这条</button></div></div>';
+      });
+    }
+    sheetBody.innerHTML=html;
+    $$('[data-view]',sheetBody).forEach(function(b){b.addEventListener('click',function(ev){ev.stopPropagation();navPush(function(){renderTreeholeDetail(b.dataset.view);});});});
+    $$('[data-del]',sheetBody).forEach(function(b){b.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      confirmDialog('确认删除这条树洞？删除后不可恢复。',function(){
+        var posts=thPosts().filter(function(x){return x.id!==b.dataset.del;});thSave(posts);
+        showToast('已删除');navBack();
+      },{danger:true,yesText:'删除',title:'删除确认'});
+    });});
+  }
+  function escapeHtml(s){return s.replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* ---------- breathing ---------- */
+  var breathTimer=null,breathPhase=0,breathCycles=0,breathRunning=false;
+  var PHASES=[{name:'吸气',dur:4000,scale:1},{name:'屏息',dur:7000,scale:1},{name:'呼气',dur:8000,scale:.5}];
+  function openBreath(){
+    var html='<div class="breath-stage"><div class="breath-circle" id="breathCircle"><span class="bt" id="breathText">准备好了吗</span></div></div>'+
+      '<div class="breath-count">已完成 <b id="breathCount">0</b> 个循环</div>'+
+      '<div style="height:14px"></div><button class="btn-primary" id="breathToggle">开始练习</button>'+
+      '<div style="height:10px"></div><button class="btn-ghost" id="breathExit">结束</button>'+
+      '<div class="seg" style="text-align:center;margin-top:12px">跟随圆圈：放大时吸气，保持时屏息，缩小时呼气。</div>';
+    openSheet('呼吸放松 · 4-7-8',html,true);
+    var circle=$('#breathCircle'),text=$('#breathText'),count=$('#breathCount'),toggle=$('#breathToggle');
+    function step(){
+      var p=PHASES[breathPhase];
+      text.textContent=p.name;
+      circle.style.transition='transform '+(p.dur/1000)+'s linear';
+      circle.style.transform='scale('+p.scale+')';
+      breathTimer=setTimeout(function(){
+        breathPhase++;
+        if(breathPhase>=PHASES.length){breathPhase=0;breathCycles++;count.textContent=breathCycles;}
+        if(breathRunning) step();
+      },p.dur);
+    }
+    toggle.addEventListener('click',function(){
+      if(!breathRunning){
+        breathRunning=true;breathPhase=0;toggle.textContent='暂停';
+        // start with inhale
+        text.textContent='吸气';circle.style.transition='transform 4s linear';circle.style.transform='scale(1)';
+        breathTimer=setTimeout(function(){
+          if(!breathRunning)return;breathPhase=1;step();
+        },4000);
+      }else{
+        breathRunning=false;clearTimeout(breathTimer);toggle.textContent='继续';
+        text.textContent='已暂停';
+      }
+    });
+    $('#breathExit').addEventListener('click',function(){breathRunning=false;clearTimeout(breathTimer);closeSheet();});
+  }
+
+  /* ---------- focus timer ---------- */
+  var focusTimer=null,focusRunning=false,focusLeft=25*60,focusTotal=25*60;
+  var FOCUS_PRESETS=[5,15,25];
+  function openFocus(){
+    function fmt(s){var m=Math.floor(s/60),ss=s%60;return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss;}
+    var chips=FOCUS_PRESETS.map(function(m){return '<button class="chip'+(m===focusTotal/60?' sel':'')+'" data-min="'+m+'"'+(focusRunning?' disabled':'')+'>'+m+' 分钟</button>';}).join('');
+    var html='<div class="seg" style="text-align:center">选一个时长，把注意力轻轻放在当下这一件事上。</div>'+
+      '<div style="text-align:center;padding:20px 0"><div id="focusTime" style="font-size:54px;font-weight:800;color:var(--primary);font-variant-numeric:tabular-nums;line-height:1">'+fmt(focusLeft)+'</div></div>'+
+      '<div class="chips" id="focusChips" style="justify-content:center;margin-bottom:16px">'+chips+'</div>'+
+      '<button class="btn-primary" id="focusToggle">'+(focusRunning?'暂停':'开始专注')+'</button>'+
+      '<div style="height:10px"></div><button class="btn-ghost" id="focusReset">重置</button>';
+    openSheet('专注计时',html,true);
+    function render(){var t=$('#focusTime');if(t)t.textContent=fmt(focusLeft);}
+    $$('#focusChips .chip').forEach(function(c){c.addEventListener('click',function(){
+      if(focusRunning)return;
+      focusTotal=parseInt(c.dataset.min,10)*60;focusLeft=focusTotal;
+      $$('#focusChips .chip').forEach(function(x){x.classList.toggle('sel',x===c);});
+      render();
+    });});
+    $('#focusToggle').addEventListener('click',function(){
+      var btn=$('#focusToggle');
+      if(!focusRunning){
+        focusRunning=true;btn.textContent='暂停';
+        $$('#focusChips .chip').forEach(function(x){x.disabled=true;});
+        focusTimer=setInterval(function(){
+          focusLeft--;
+          if(focusLeft<=0){focusLeft=0;render();focusRunning=false;clearInterval(focusTimer);btn.textContent='开始专注';$$('#focusChips .chip').forEach(function(x){x.disabled=false;});showToast('专注完成 🎉 记得奖励自己');focusLeft=focusTotal;render();return;}
+          render();
+        },1000);
+      }else{
+        focusRunning=false;clearInterval(focusTimer);btn.textContent='继续';
+        $$('#focusChips .chip').forEach(function(x){x.disabled=false;});
+      }
+    });
+    $('#focusReset').addEventListener('click',function(){
+      focusRunning=false;clearInterval(focusTimer);focusLeft=focusTotal;render();
+      var btn=$('#focusToggle');if(btn)btn.textContent='开始专注';
+      $$('#focusChips .chip').forEach(function(x){x.disabled=false;});
+    });
+  }
+
+  /* ---------- gratitude ---------- */
+  var GRATKEY='ws_gratitude';
+  function openGratitude(){
+    var saved=getStore(GRATKEY,{});
+    var d=new Date();var today=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    var vals=(saved.date===today)?(saved.items||['','','']):['','',''];
+    var html='<div class="seg">每天记下值得感恩的小事，是对抗消极偏差的简单练习。</div>'+
+      '<div class="field"><label>第 1 件</label><input class="inp" id="g1" placeholder="例如：今天天气很好" value="'+escapeHtml(vals[0]||'')+'"></div>'+
+      '<div class="field"><label>第 2 件</label><input class="inp" id="g2" placeholder="例如：朋友回了消息" value="'+escapeHtml(vals[1]||'')+'"></div>'+
+      '<div class="field"><label>第 3 件</label><input class="inp" id="g3" placeholder="例如：喝到一杯好喝的奶茶" value="'+escapeHtml(vals[2]||'')+'"></div>'+
+      '<button class="btn-primary" id="gSave">保存今天的感恩</button>'+
+      '<div class="seg" id="gStat" style="text-align:center;margin-top:12px">'+(saved.date===today?'今天已记录 ✓ 可随时修改':'还没有记录过，从今天开始 🌟')+'</div>';
+    openSheet('感恩三件事',html,true);
+    $('#gSave').addEventListener('click',function(){
+      var items=[$('#g1').value.trim(),$('#g2').value.trim(),$('#g3').value.trim()].filter(Boolean);
+      if(!items.length){showToast('先写一件再保存吧');return;}
+      setStore(GRATKEY,{date:today,items:items});
+      var st=$('#gStat');if(st)st.textContent='已保存 '+items.length+' 件 · 明天再继续 🌿';
+      showToast('感恩已记下 💚');
+    });
+  }
+
+  /* ---------- comfort ---------- */
+  var COMFORTS=[
+    '你不需要一直坚强，允许自己偶尔脆弱。',
+    '今天做不到的事，明天可以慢慢来。',
+    '你已经做得够好了，真的。',
+    '情绪像天气，会来也会走，不用急着赶走它。',
+    '有人在乎你，即使你现在感觉不到。',
+    '休息不是偷懒，是给自己续命。',
+    '把大事拆小，先完成一步就好。',
+    '你不是一个人在和这些感受对抗。',
+    '对自己温柔一点，就像对待好朋友那样。',
+    '此刻的难，不代表永远的难。'
+  ];
+  function openComfort(){
+    function pick(){return COMFORTS[Math.floor(Math.random()*COMFORTS.length)];}
+    var html='<div style="background:var(--primary-soft);border-radius:18px;padding:28px 20px;text-align:center;margin-bottom:14px">'+
+      '<div style="font-size:34px;margin-bottom:12px">🤍</div>'+
+      '<div id="comfortText" style="font-size:16px;font-weight:600;color:var(--text-dark);line-height:1.7">'+pick()+'</div></div>'+
+      '<button class="btn-primary" id="comfortNext">换一句</button>'+
+      '<div style="height:10px"></div><button class="btn-ghost" id="comfortClose">收下这句话</button>';
+    openSheet('今日安慰',html,true);
+    $('#comfortNext').addEventListener('click',function(){var t=$('#comfortText');if(t)t.textContent=pick();});
+    $('#comfortClose').addEventListener('click',closeSheet);
+  }
+
+  /* ---------- sheet / nav stack ---------- */
+  var overlay=$('#overlay'),sheetBody=$('#sheetBody'),sheetTitle=$('#sheetTitle'),sheetBack=$('#sheetBack');
+  var navStack=[];
+  var activeNoiseTimer=null;
+  function cleanupTimers(){
+    if(breathRunning){breathRunning=false;clearTimeout(breathTimer);}
+    if(focusRunning){focusRunning=false;clearInterval(focusTimer);}
+    if(activeNoiseTimer){clearTimeout(activeNoiseTimer);activeNoiseTimer=null;}
+  }
+  function navRender(){
+    var fn=navStack[navStack.length-1];
+    if(fn) fn();
+    if(sheetBack) sheetBack.style.display=(navStack.length>1)?'flex':'none';
+    overlay.classList.add('show');
+    sheetBody.scrollTop=0;
+  }
+  /* openSheet: open as a root page (atomic modules that don't push children) */
+  function openSheet(title,html){
+    navStack=[function(){sheetTitle.textContent=title;sheetBody.innerHTML=html;}];
+    navRender();
+  }
+  /* navTo: open a render-function as the root page (render fn sets title+body+binds) */
+  function navTo(renderFn){navStack=[renderFn];navRender();}
+  /* navPush: push a child page on top (has a back button) */
+  function navPush(renderFn){navStack.push(renderFn);navRender();}
+  function navBack(){if(navStack.length>1){navStack.pop();navRender();}else{navClose();}}
+  function navClose(){overlay.classList.remove('show');navStack=[];cleanupTimers();}
+  function closeSheet(){navClose();}
+  $('#sheetClose').addEventListener('click',navClose);
+  sheetBack.addEventListener('click',navBack);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)navClose();});
+
+  /* ---------- confirm dialog ---------- */
+  function confirmDialog(msg,onYes,opts){
+    opts=opts||{};
+    $('#confirmTitle').textContent=opts.title||'请确认';
+    $('#confirmMsg').textContent=msg;
+    var yes=$('#confirmYes');
+    yes.textContent=opts.yesText||'确认';
+    yes.classList.toggle('danger',!!opts.danger);
+    $('#confirmOv').classList.add('show');
+    $('#confirmNo').onclick=function(){$('#confirmOv').classList.remove('show');if(opts.onNo)opts.onNo();};
+    yes.onclick=function(){$('#confirmOv').classList.remove('show');onYes();};
+  }
+  $('#confirmOv').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+
+  /* ===================== 即时舒缓 ===================== */
+  function openRelief(){navTo(renderRelief);}
+  function practiceSavePrompt(name,dur,type){
+    confirmDialog('保存练习记录','是否将本次「'+name+'」练习记录保存到本地心理档案？',function(){
+      var recs=getStore('ws_practice_records',[]);recs.push({time:Date.now(),type:type||'relief',name:name,dur:dur||0});setStore('ws_practice_records',recs);showToast('已保存到练习记录 🌿');navBack();
+    },{yesText:'保存',noText:'不用了',onNo:function(){navBack();}});
+  }
+  function renderRelief(){
+    sheetTitle.textContent='即时舒缓';
+    var items=[
+      {ic:'🌬️',t:'呼吸调节',d:'心慌、紧张、情绪激动时',go:renderReliefBreath},
+      {ic:'👀',t:'5-4-3-2-1 感官接地',d:'急性焦虑、头脑混乱时',go:renderReliefGround},
+      {ic:'🔊',t:'环境白噪音',d:'需要背景声帮助专注或入睡',go:renderReliefNoise}
+    ];
+    var html='<div class="seg">选一个方式，先让自己慢下来。</div>';
+    items.forEach(function(it,i){
+      html+='<div class="hub-item" data-i="'+i+'"><span class="hub-ic">'+it.ic+'</span><span class="hub-mid"><div class="hn">'+it.t+'</div><div class="hd">'+it.d+'</div></span><span class="chev">›</span></div>';
+    });
+    sheetBody.innerHTML=html;
+    $$('.hub-item',sheetBody).forEach(function(el){el.addEventListener('click',function(){navPush(items[+el.dataset.i].go);});});
+  }
+  function renderReliefBreath(){
+    sheetTitle.textContent='呼吸调节';
+    sheetBody.innerHTML=
+      '<div class="practice-meta">适用场景：心慌、紧张、情绪激动</div>'+
+      '<div class="practice-dur">模式：4-7-8 呼吸法（吸气 4 秒 · 屏息 7 秒 · 呼气 8 秒）</div>'+
+      '<div class="breath-stage"><div class="breath-circle" id="breathCircle"><span class="bt" id="breathText">准备好了吗</span></div></div>'+
+      '<div class="breath-count">计时 <b id="breathClock">00:00</b> · 已完成 <b id="breathCount">0</b> 循环</div>'+
+      '<div style="height:14px"></div><button class="btn-primary" id="breathToggle">开始练习</button>'+
+      '<div style="height:10px"></div><button class="btn-ghost" id="breathExit">结束</button>'+
+      '<div class="seg" style="text-align:center;margin-top:12px">跟随圆圈：放大时吸气，保持时屏息，缩小时呼气。不用刻意做到完美节奏。</div>';
+    var circle=$('#breathCircle'),text=$('#breathText'),count=$('#breathCount'),clock=$('#breathClock'),toggle=$('#breathToggle');
+    var secs=0,clockTimer=null;
+    function fmt(s){var m=Math.floor(s/60),ss=s%60;return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss;}
+    function step(){
+      var p=PHASES[breathPhase];
+      text.textContent=p.name;
+      circle.style.transition='transform '+(p.dur/1000)+'s linear';
+      circle.style.transform='scale('+p.scale+')';
+      breathTimer=setTimeout(function(){
+        breathPhase++;
+        if(breathPhase>=PHASES.length){breathPhase=0;breathCycles++;count.textContent=breathCycles;}
+        if(breathRunning) step();
+      },p.dur);
+    }
+    toggle.addEventListener('click',function(){
+      if(!breathRunning){
+        breathRunning=true;breathPhase=0;toggle.textContent='暂停';
+        text.textContent='吸气';circle.style.transition='transform 4s linear';circle.style.transform='scale(1)';
+        if(!clockTimer)clockTimer=setInterval(function(){secs++;if(clock)clock.textContent=fmt(secs);},1000);
+        breathTimer=setTimeout(function(){if(!breathRunning)return;breathPhase=1;step();},4000);
+      }else{
+        breathRunning=false;clearTimeout(breathTimer);toggle.textContent='继续';text.textContent='已暂停';
+      }
+    });
+    $('#breathExit').addEventListener('click',function(){
+      var done=breathCycles,sec=secs;breathRunning=false;clearTimeout(breathTimer);if(clockTimer){clearInterval(clockTimer);clockTimer=null;}
+      if(done>0) practiceSavePrompt('呼吸调节',sec,'relief'); else navBack();
+    });
+  }
+  function renderReliefGround(){
+    sheetTitle.textContent='感官接地练习';
+    var list=[
+      {n:5,txt:'你能看到的事物'},
+      {n:4,txt:'你可以触摸到的事物'},
+      {n:3,txt:'你能听到的声音'},
+      {n:2,txt:'你能闻到的气味'},
+      {n:1,txt:'你能尝到的味道'}
+    ];
+    var html='<div class="seg">适用：急性焦虑、心慌、头脑混乱。按照顺序在现实中寻找，每完成一项手动打勾。无强制计时，按自己节奏完成。</div>';
+    list.forEach(function(it){
+      html+='<label class="ground-item"><input type="checkbox" class="gchk"><span><b>'+it.n+' 件</b> '+it.txt+'</span></label>';
+    });
+    html+='<div style="height:14px"></div><button class="btn-ghost" id="groundReset">重置勾选项</button>';
+    sheetBody.innerHTML=html;
+    $('#groundReset').addEventListener('click',function(){$$('.gchk',sheetBody).forEach(function(c){c.checked=false;});});
+  }
+  function renderReliefNoise(){
+    sheetTitle.textContent='环境白噪音';
+    var sounds=[
+      {id:'rain',ic:'🌧️',name:'雨声'},
+      {id:'wind',ic:'🍃',name:'林间风声'},
+      {id:'wave',ic:'🌊',name:'海边海浪'},
+      {id:'fire',ic:'🔥',name:'壁炉篝火'}
+    ];
+    var html='<div class="seg">选择音频，后台循环播放（当前为模拟状态，真实项目后续接入 audio）。</div><div class="noise-list" id="noiseList">';
+    sounds.forEach(function(s){html+='<div class="noise-item" data-id="'+s.id+'"><span class="ni-ic">'+s.ic+'</span><span class="ni-name">'+s.name+'</span><span class="ni-state" data-id="'+s.id+'"></span></div>';});
+    html+='</div>';
+    html+='<div class="field"><label>音量</label><input type="range" min="0" max="100" value="50" class="vol" id="vol"></div>';
+    html+='<div class="field"><label>定时关闭</label><div class="chips" id="noiseTimer"><div class="chip sel" data-min="0">关闭</div><div class="chip" data-min="15">15</div><div class="chip" data-min="30">30</div><div class="chip" data-min="60">60</div></div></div>';
+    html+='<button class="btn-primary" id="noiseToggle">播放</button>';
+    sheetBody.innerHTML=html;
+    var playing=null,offMin=0,vol=50;
+    function setState(){
+      $$('.ni-state',sheetBody).forEach(function(el){el.textContent=(el.dataset.id===playing)?'▶ 播放中':'';});
+      $$('.noise-item',sheetBody).forEach(function(el){el.classList.toggle('sel',el.dataset.id===playing);});
+    }
+    $$('.noise-item',sheetBody).forEach(function(el){el.addEventListener('click',function(){
+      var id=el.dataset.id;
+      if(playing===id){playing=null;}
+      else{playing=id;if(activeNoiseTimer){clearTimeout(activeNoiseTimer);activeNoiseTimer=null;}}
+      setState();updateToggle();
+    });});
+    $('#vol').addEventListener('input',function(){vol=+this.value;});
+    $$('#noiseTimer .chip',sheetBody).forEach(function(c){c.addEventListener('click',function(){
+      $$('#noiseTimer .chip',sheetBody).forEach(function(x){x.classList.remove('sel');});c.classList.add('sel');
+      offMin=+c.dataset.min;
+      if(activeNoiseTimer){clearTimeout(activeNoiseTimer);activeNoiseTimer=null;}
+      if(playing&&offMin>0){activeNoiseTimer=setTimeout(function(){playing=null;setState();updateToggle();showToast('白噪音已按定时停止');},offMin*60*1000);}
+    });});
+    function updateToggle(){var b=$('#noiseToggle');if(b)b.textContent=playing?'暂停':'播放';}
+    $('#noiseToggle').addEventListener('click',function(){
+      if(playing){playing=null;if(activeNoiseTimer){clearTimeout(activeNoiseTimer);activeNoiseTimer=null;}}
+      else{if(!playing)playing='rain';if(offMin>0){activeNoiseTimer=setTimeout(function(){playing=null;setState();updateToggle();showToast('白噪音已按定时停止');},offMin*60*1000);}}
+      setState();updateToggle();
+    });
+  }
+
+  /* ===================== 情绪记录 ===================== */
+  var EMO_EVENT=['学业压力','人际','家庭','恋爱','睡眠','健康','未来规划','自我怀疑','孤独'];
+  var EMO_BODY=['心慌','胸闷','头痛','失眠','胃不舒服','肌肉紧绷','疲惫','食欲变化'];
+  function openEmotion(){navTo(renderEmotion);}
+  function renderEmotion(){
+    sheetTitle.textContent='情绪记录';
+    var html='<div class="seg">记录此刻的情绪、发生了什么、身体的感受。</div>'+
+      '<div class="field"><label class="tag-label">此刻的心情</label><div class="emo-moods" id="emoMoods"></div></div>'+
+      '<div class="field"><label class="tag-label">发生了什么（可多选）</label><div class="tag-chips" id="emoEvents"></div></div>'+
+      '<div class="field"><label class="tag-label">身体的感受（可多选）</label><div class="tag-chips" id="emoBodies"></div></div>'+
+      '<div class="field"><label class="tag-label">想说的话（选填）</label><textarea class="ph-input" id="emoNote" placeholder="简单描述一下，或什么都不写也没关系。"></textarea></div>'+
+      '<button class="btn-primary" id="emoSave">保存记录</button>'+
+      '<div style="height:10px"></div><button class="btn-ghost" id="emoHistory">查看历史记录</button>';
+    sheetBody.innerHTML=html;
+    var st={mood:0,events:[],bodies:[]};
+    var mb=$('#emoMoods');
+    MOODS.forEach(function(m){
+      var b=document.createElement('div');b.className='emo-mood';b.dataset.s=m.s;
+      b.innerHTML='<span class="e">'+m.e+'</span><span class="l">'+m.l+'</span>';
+      b.addEventListener('click',function(){st.mood=m.s;$$('.emo-mood',mb).forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');});
+      mb.appendChild(b);
+    });
+    function chipBox(sel,arr,key){
+      var box=$('#'+sel);
+      arr.forEach(function(t){
+        var c=document.createElement('div');c.className='tag-chip';c.textContent=t;
+        c.addEventListener('click',function(){
+          var i=st[key].indexOf(t);
+          if(i>=0){st[key].splice(i,1);c.classList.remove('sel');}
+          else{st[key].push(t);c.classList.add('sel');}
+        });
+        box.appendChild(c);
+      });
+    }
+    chipBox('emoEvents',EMO_EVENT,'events');
+    chipBox('emoBodies',EMO_BODY,'bodies');
+    $('#emoSave').addEventListener('click',function(){
+      if(!st.mood){showToast('先选一下此刻的心情吧');return;}
+      var recs=getStore('ws_mood_records',[]);
+      recs.push({time:Date.now(),moodCode:st.mood,eventTags:st.events,bodyTags:st.bodies,note:$('#emoNote').value.trim()});
+      setStore('ws_mood_records',recs);
+      showToast('情绪已记录 💚');navBack();
+    });
+    $('#emoHistory').addEventListener('click',function(){navPush(renderEmotionHistory);});
+  }
+  function emotionInRange(t,f){
+    var d=new Date(),start;
+    if(f==='week'){var day=(d.getDay()||7)-1;start=new Date(d.getFullYear(),d.getMonth(),d.getDate()-day).getTime();}
+    else if(f==='month'){start=new Date(d.getFullYear(),d.getMonth(),1).getTime();}
+    else return true;
+    return t>=start;
+  }
+  function renderEmotionHistory(){
+    sheetTitle.textContent='历史情绪记录';
+    var recs=getStore('ws_mood_records',[]);
+    sheetBody.innerHTML=
+      '<div class="filter-tabs" id="emoFilter"><div class="ftab sel" data-f="all">全部</div><div class="ftab" data-f="week">本周</div><div class="ftab" data-f="month">本月</div></div>'+
+      '<div id="emoList"></div>'+
+      '<div class="muted-note">'+INFO_SVG+'<span>所有记录仅保存在本机浏览器。</span></div>'+
+      '<div style="height:10px"></div><button class="btn-ghost" id="emoClear">清空全部记录</button>';
+    function paint(f){
+      var list=$('#emoList');list.innerHTML='';
+      var arr=recs.slice().filter(function(r){return emotionInRange(r.time,f);}).sort(function(a,b){return b.time-a.time;});
+      if(!arr.length){list.innerHTML='<div class="empty">这一段时间还没有记录</div>';return;}
+      arr.forEach(function(r){
+        var m=MOODS[r.moodCode-1]||{e:'🙂',l:'平常'};
+        var tags=(r.eventTags||[]).concat(r.bodyTags||[]).map(function(t){return '<span class="rec-tag">'+escapeHtml(t)+'</span>';}).join('');
+        var el=document.createElement('div');el.className='rec-item';
+        el.innerHTML='<div class="rec-top"><span class="rec-mood">'+m.e+' '+m.l+'</span><span class="rec-time">'+relTime(r.time)+'</span></div>'+
+          (tags?'<div class="rec-tags">'+tags+'</div>':'')+
+          (r.note?'<div class="rec-note">'+escapeHtml(r.note)+'</div>':'')+
+          '<div style="margin-top:8px"><button class="rec-del" data-del="'+r.time+'">删除这条</button></div>';
+        el.addEventListener('click',function(e){if(e.target.classList.contains('rec-del'))return;navPush(function(){renderEmotionDetail(r);});});
+        list.appendChild(el);
+      });
+      $$('.rec-del',list).forEach(function(b){b.addEventListener('click',function(ev){
+        ev.stopPropagation();
+        confirmDialog('确认删除这条情绪记录？',function(){
+          var nr=getStore('ws_mood_records',[]).filter(function(x){return x.time!==r.time;});setStore('ws_mood_records',nr);recs=nr;paint(f);showToast('已删除');
+        },{danger:true,yesText:'删除',title:'删除确认'});
+      });});
+    }
+    paint('all');
+    $$('#emoFilter .ftab',sheetBody).forEach(function(t){t.addEventListener('click',function(){$$('#emoFilter .ftab',sheetBody).forEach(function(x){x.classList.remove('sel');});t.classList.add('sel');paint(t.dataset.f);});});
+    $('#emoClear').addEventListener('click',function(){
+      confirmDialog('确认清空全部情绪记录？此操作不可恢复。',function(){setStore('ws_mood_records',[]);recs=[];paint('all');showToast('已清空');},{danger:true,yesText:'清空',title:'清空确认'});
+    });
+  }
+  function renderEmotionDetail(r){
+    sheetTitle.textContent='情绪记录详情';
+    var m=MOODS[r.moodCode-1]||{e:'🙂',l:'平常'};
+    var html='<div class="rec-detail">';
+    html+='<div class="rd-row"><div class="rd-k">记录时间</div><div class="rd-v">'+relTime(r.time)+'</div></div>';
+    html+='<div class="rd-row"><div class="rd-k">心情</div><div class="rd-v">'+m.e+' '+m.l+'</div></div>';
+    if(r.eventTags&&r.eventTags.length)html+='<div class="rd-row"><div class="rd-k">发生了什么</div><div class="rd-v">'+(r.eventTags||[]).map(function(t){return '<span class="rec-tag">'+escapeHtml(t)+'</span>';}).join(' ')+'</div></div>';
+    if(r.bodyTags&&r.bodyTags.length)html+='<div class="rd-row"><div class="rd-k">身体感受</div><div class="rd-v">'+(r.bodyTags||[]).map(function(t){return '<span class="rec-tag">'+escapeHtml(t)+'</span>';}).join(' ')+'</div></div>';
+    if(r.note)html+='<div class="rd-row"><div class="rd-k">想说的话</div><div class="rd-v">'+escapeHtml(r.note)+'</div></div>';
+    html+='</div>';
+    sheetBody.innerHTML=html;
+  }
+
+  /* ===================== 自助练习 ===================== */
+  var SELF_HELP=[
+    {key:'sleep',name:'睡前放松',meta:'适用：入睡困难、身体紧绷',dur:'预估时长 8-12 分钟',steps:['调整躺卧姿势，让身体完全被床支撑，从脚到头依次放松。','跟随下方的呼吸节奏，吸气时鼓起腹部，呼气时慢慢沉下去。','不必强迫自己睡着，告诉自己「休息着就好」，没有必须做完。']},
+    {key:'rumi',name:'反反刍思维练习',meta:'适用：反复回想过去不愉快事件',dur:'预估时长 3-5 分钟',steps:['识别：我现在正在反复回想同一件事。','标记想法：这只是一种想法，并不等于事实。','做一个感官转移：看看窗外、听听周围、动动手指。']},
+    {key:'detach',name:'短暂抽离',meta:'适用：当下冲突、压力过载',dur:'建议离开环境 3-5 分钟',steps:['如果可以，先离开当下的房间或对话。','给自己 3 分钟，去接杯水、走两步、看看远处。','回到现场前，深呼吸一次，告诉自己「我可以先照顾好自己」。']},
+    {key:'affirm',name:'自我暗示练习',meta:'适用：自我否定、情绪低落',dur:'随时可做',steps:['选一句中性、温和的短句，慢慢读给自己听。','可以自定义属于你的句子，循环阅读几遍。','让这句话像背景音，不急着相信，先让它待着。']}
+  ];
+  function openSelfHelp(){navTo(renderSelfHelp);}
+  function renderSelfHelp(){
+    sheetTitle.textContent='自助练习';
+    var html='<div class="seg">挑一个练习，按自己的节奏来，随时可以退出。</div>';
+    SELF_HELP.forEach(function(s,i){
+      html+='<div class="hub-item" data-i="'+i+'"><span class="hub-ic">'+(i===0?'🌙':i===1?'🔄':i===2?'🚶':'🪞')+'</span><span class="hub-mid"><div class="hn">'+s.name+'</div><div class="hd">'+s.meta+'</div></span><span class="chev">›</span></div>';
+    });
+    sheetBody.innerHTML=html;
+    $$('.hub-item',sheetBody).forEach(function(el){el.addEventListener('click',function(){navPush(function(){renderSelfHelpDetail(SELF_HELP[+el.dataset.i]);});});});
+  }
+  function renderSelfHelpDetail(s){
+    sheetTitle.textContent=s.name;
+    var html='<div class="practice-meta">'+s.meta+'</div><div class="practice-dur">'+s.dur+'</div><div class="practice-steps">';
+    s.steps.forEach(function(st,i){html+='<div class="practice-step"><span class="ps-n">'+(i+1)+'</span><span class="ps-t">'+st+'</span></div>';});
+    html+='</div>';
+    if(s.key==='sleep'){
+      html+='<div class="breath-stage"><div class="breath-circle" id="shBreath" style="width:130px;height:130px"><span class="bt" id="shBreathText">跟随呼吸</span></div></div>';
+    }
+    if(s.key==='rumi'){
+      html+='<div class="field" style="margin-top:6px"><label class="tag-label">此刻反复出现的想法（选填）</label><textarea class="ph-input" id="rumiInput" placeholder="把它写下来，然后轻轻放下。"></textarea></div>';
+    }
+    if(s.key==='detach'){
+      html+='<div class="field"><label class="tag-label">短暂抽离计时</label><div class="chips" id="detachTimer"><div class="chip sel" data-min="3">3 分钟</div><div class="chip" data-min="5">5 分钟</div></div></div><div id="detachClock" style="text-align:center;font-size:40px;font-weight:800;color:var(--primary);font-variant-numeric:tabular-nums">03:00</div>';
+    }
+    if(s.key==='affirm'){
+      var phrases=['我已经做得够好了。','此刻的难，不代表永远的难。','我允许自己慢慢来。','我值得被温柔对待。'];
+      html+='<div class="phrase-box"><div class="pb-t" id="affirmText">'+phrases[0]+'</div><div class="pb-i" id="affirmIdx">1 / '+phrases.length+'</div></div>'+
+        '<div class="field"><label class="tag-label">自定义一句（选填）</label><input class="inp" id="affirmCustom" placeholder="写下属于你的温和短句"></div>'+
+        '<button class="btn-ghost" id="affirmNext">换一句 / 加入我的句子</button>';
+    }
+    html+='<div style="height:14px"></div><button class="btn-primary" id="shStart">开始练习</button><div style="height:10px"></div><button class="btn-ghost" id="shExit">结束退出</button>';
+    sheetBody.innerHTML=html;
+
+    var shBreathTimer=null,shRunning=false,shPhase=0;
+    if(s.key==='sleep'){
+      var sc=$('#shBreath'),stx=$('#shBreathText');
+      $('#shStart').addEventListener('click',function(){
+        if(!shRunning){shRunning=true;shPhase=0;stx.textContent='吸气';sc.style.transition='transform 4s linear';sc.style.transform='scale(1)';shBreathTimer=setTimeout(function(){if(!shRunning)return;shPhase=1;sleepStep();},4000);this.textContent='暂停';}
+        else{shRunning=false;clearTimeout(shBreathTimer);this.textContent='继续';stx.textContent='已暂停';}
+      });
+      function sleepStep(){var p=PHASES[shPhase];stx.textContent=p.name;sc.style.transition='transform '+(p.dur/1000)+'s linear';sc.style.transform='scale('+p.scale+')';shBreathTimer=setTimeout(function(){shPhase++;if(shPhase>=PHASES.length)shPhase=0;if(shRunning)sleepStep();},p.dur);}
+    }
+    if(s.key==='detach'){
+      var dm=3,dtLeft=3*60,dtTimer=null,dtRunning=false;
+      function fmt(s){var m=Math.floor(s/60),ss=s%60;return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss;}
+      $$('#detachTimer .chip',sheetBody).forEach(function(c){c.addEventListener('click',function(){$$('#detachTimer .chip',sheetBody).forEach(function(x){x.classList.remove('sel');});c.classList.add('sel');dm=+c.dataset.min;dtLeft=dm*60;$('#detachClock').textContent=fmt(dtLeft);});});
+      $('#shStart').addEventListener('click',function(){
+        if(!dtRunning){dtRunning=true;this.textContent='暂停';dtTimer=setInterval(function(){dtLeft--;if(dtLeft<=0){dtLeft=0;if($('#detachClock'))$('#detachClock').textContent=fmt(0);dtRunning=false;clearInterval(dtTimer);this.textContent='开始练习';showToast('抽离时间到，慢慢回去吧');return;}if($('#detachClock'))$('#detachClock').textContent=fmt(dtLeft);},1000);}
+        else{dtRunning=false;clearInterval(dtTimer);this.textContent='继续';}
+      });
+    }
+    if(s.key==='affirm'){
+      var plist=phrases.slice(),pi=0;
+      $('#affirmNext').addEventListener('click',function(){
+        var custom=$('#affirmCustom').value.trim();
+        if(custom&&plist.indexOf(custom)<0)plist.push(custom);
+        pi=(pi+1)%plist.length;$('#affirmText').textContent=plist[pi];$('#affirmIdx').textContent=(pi+1)+' / '+plist.length;
+      });
+    }
+    if(s.key==='rumi'||s.key==='affirm'){
+      $('#shStart').addEventListener('click',function(){showToast('跟着上面的引导慢慢来，结束后可保存记录 🌿');});
+    }
+    $('#shExit').addEventListener('click',function(){
+      if(shBreathTimer)clearTimeout(shBreathTimer);
+      if(window.__dtTimer)clearInterval(window.__dtTimer);
+      practiceSavePrompt(s.name,0,'selfhelp');
+    });
+    if(s.key==='detach'){window.__dtTimer=dtTimer;}
+  }
+
+  /* ===================== 求助指引 ===================== */
+  var HELP_FAQ=[
+    {q:'找咨询师是不是代表我病了？',a:'不是。遇到生活困扰都可以预约，类似找辅导员聊一聊，是照顾自己的方式。'},
+    {q:'咨询记录会不会被别人看到？',a:'校园咨询遵循保密协议，仅咨询师可见，特殊危机情况（如自伤风险）例外。'},
+    {q:'我该什么时候打热线？',a:'当下来痛苦难以承受、或想伤害自己时，请立刻拨打热线，有人愿意听你说。'}
+  ];
+  var INFO_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+  function openHelp(){navTo(renderHelp);}
+  function renderHelp(){
+    sheetTitle.textContent='求助指引';
+    sheetBody.innerHTML=
+      '<div class="seg">如果你正经历困扰，下面的信号提示或许该寻求支持：</div>'+
+      '<div class="help-signal">'+
+        '<div class="hs">'+INFO_SVG+'<span>情绪持续低落或焦虑超过两周，影响上课和睡眠</span></div>'+
+        '<div class="hs">'+INFO_SVG+'<span>对原本喜欢的事失去兴趣，精力明显下降</span></div>'+
+        '<div class="hs">'+INFO_SVG+'<span>反复出现伤害自己的念头</span></div>'+
+      '</div>'+
+      '<button class="help-big c-primary" id="helpCampus">'+INFO_SVG+'校园心理咨询中心</button>'+
+      '<button class="help-big c-calm" id="helpHot">'+INFO_SVG+'查看全部援助热线</button>'+
+      '<button class="help-big c-calm" id="helpFaq" style="background:var(--primary-soft);color:var(--primary);box-shadow:none">'+INFO_SVG+'常见疑问</button>';
+    $('#helpCampus').addEventListener('click',function(){navPush(renderHelpCampus);});
+    $('#helpHot').addEventListener('click',function(){navPush(renderHelpHotlines);});
+    $('#helpFaq').addEventListener('click',function(){navPush(renderHelpFaq);});
+  }
+  function renderHelpCampus(){
+    sheetTitle.textContent='校园心理咨询中心';
+    sheetBody.innerHTML=
+      '<div class="hub-item" style="cursor:default;margin-bottom:14px"><span class="hub-ic">📍</span><span class="hub-mid"><div class="hn">学生活动中心 302 室</div><div class="hd">地址</div></span></div>'+
+      '<div class="hub-item" style="cursor:default;margin-bottom:14px"><span class="hub-ic">⏰</span><span class="hub-mid"><div class="hn">工作日 9:00 - 17:00</div><div class="hd">工作时间</div></span></div>'+
+      '<div class="seg">预约方式：在「预约咨询」页面选择咨询师与时段。</div>'+
+      '<button class="btn-primary" id="campusBook">跳转至咨询预约</button>'+
+      '<div class="muted-note">'+INFO_SVG+'<span>注意事项：预约需提交简单诉求描述；记录仅心理中心可见；若临时无法参加，请提前取消。</span></div>';
+    $('#campusBook').addEventListener('click',function(){navClose();showWS('ws-book');});
+  }
+  function renderHelpHotlines(){
+    sheetTitle.textContent='24小时援助热线';
+    var html='';
+    HOTLINES.forEach(function(h){
+      html+='<a class="hotline-card" href="tel:'+h.num.replace(/-/g,'')+'"><span class="hc-ic">'+INFO_SVG+'</span><span class="hc-mid"><div class="hc-n">'+h.name+'</div><div class="hc-num">'+h.num+'</div><div class="hc-note">'+h.note+'</div></span><span class="hc-go">拨打 ›</span></a>';
+    });
+    html+='<div class="muted-note">'+INFO_SVG+'<span>如果有自伤想法，请优先拨打危机干预类热线。</span></div>';
+    sheetBody.innerHTML=html;
+  }
+  function renderHelpFaq(){
+    sheetTitle.textContent='常见疑问';
+    var html='';
+    HELP_FAQ.forEach(function(f){html+='<div class="faq-item"><div class="faq-q">Q：'+f.q+'</div><div class="faq-a">A：'+f.a+'</div></div>';});
+    sheetBody.innerHTML=html;
+  }
+
+  /* ===================== 练习记录 / 状态参考（档案用） ===================== */
+  function renderPracticeRecords(){
+    sheetTitle.textContent='练习记录';
+    var recs=getStore('ws_practice_records',[]);
+    var html='<div class="seg">即时舒缓与自助练习的完成记录（仅存本机）。</div>';
+    if(!recs.length){html+='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>还没有练习记录，去「即时舒缓」或「自助练习」试试吧</div>';}
+    else{
+      recs.slice().reverse().forEach(function(r){
+        var d=new Date(r.time);
+        html+='<div class="rec-item"><div class="rec-top"><span class="rec-mood">'+r.name+'</span><span class="rec-time">'+(d.getMonth()+1)+'月'+d.getDate()+'日'+(r.dur?(' · '+Math.round(r.dur/60)+'分钟'):'')+'</span></div></div>';
+      });
+    }
+    sheetBody.innerHTML=html;
+  }
+  function renderScaleSheet(){
+    sheetTitle.textContent='状态参考';
+    sheetBody.innerHTML=
+      '<div class="disclaimer" style="margin-bottom:12px">'+INFO_SVG+'<span>国际通用筛查量表，<b>不能替代专业诊断</b>。</span></div>'+
+      '<div id="scaleSheetList"></div>';
+    var box=$('#scaleSheetList');
+    Object.keys(SCALES).forEach(function(k){
+      var sc=SCALES[k];
+      var el=document.createElement('button');el.className='scale-item';
+      el.innerHTML='<span class="scale-ic">'+INFO_SVG+'</span><span class="scale-mid"><div class="sn">'+sc.name+'</div><div class="sd">'+sc.short+'</div></span><span class="chev">›</span>';
+      el.addEventListener('click',function(){openScale(k);});
+      box.appendChild(el);
+    });
+  }
+
+  /* ===================== 初始化 ===================== */
+  seedTreehole();
+})();
+</script>
+</body>
+</html>
