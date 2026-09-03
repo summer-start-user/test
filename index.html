@@ -1224,10 +1224,10 @@
       border-radius:calc(26px); padding:calc(14px) calc(18px); box-shadow:var(--shadow-md);
       transform-origin:right center; transform:scaleX(0); opacity:0; width:calc(310px); overflow:hidden;
       transition:transform .35s cubic-bezier(.34,1.56,.64,1), opacity .25s;
-      right:calc(100% + 10px); top:50%; margin-top:calc(-24px);
+      right:calc(100% + 12px); top:50%; margin-top:calc(-24px);
     }
     .floating-ball.expanded .func-panel { transform:scaleX(1); opacity:1; }
-    .floating-ball.on-left .func-panel { transform-origin:left center; right:auto; left:calc(100% + 10px); }
+    .floating-ball.on-left .func-panel { transform-origin:left center; right:auto; left:calc(100% + 12px); }
     .func-item { display:flex; flex-direction:column; align-items:center; gap:calc(6px); width:calc(50px); opacity:0; transform:translateX(calc(10px)); transition:opacity .2s, transform .25s; }
     .floating-ball.expanded .func-item { opacity:1; transform:translateX(0); }
     .floating-ball.expanded .func-item:nth-child(1){transition-delay:.05s} .floating-ball.expanded .func-item:nth-child(2){transition-delay:.10s} .floating-ball.expanded .func-item:nth-child(3){transition-delay:.15s} .floating-ball.expanded .func-item:nth-child(4){transition-delay:.20s}
@@ -1235,13 +1235,13 @@
     .func-item:active .func-icon { transform:scale(.92); background:#DBEAFE; }
     .func-label { font-size:calc(11px); color:var(--text-gray); white-space:nowrap; font-weight:500; }
     .func-label.s4 { font-size:calc(10px); letter-spacing:.5px; }
-    .main-ball { width:calc(56px); height:calc(56px); border-radius:50%; background:var(--primary-grad); box-shadow:var(--shadow-hero); display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:transform .2s; }
+    .main-ball { width:calc(64px); height:calc(64px); border-radius:50%; background:var(--primary-grad); box-shadow:var(--shadow-hero); display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:transform .2s; }
     .main-ball:active { transform:scale(.94); }
-    .dots-icon { display:grid; grid-template-columns:repeat(2,calc(6px)); gap:calc(10px); transition:opacity .25s, transform .3s cubic-bezier(.34,1.56,.64,1); }
-    .dots-icon span { width:calc(6px); height:calc(6px); border-radius:calc(3px); background:#fff; transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
+    .dots-icon { display:grid; grid-template-columns:repeat(2,calc(7px)); gap:calc(11px); transition:opacity .25s, transform .3s cubic-bezier(.34,1.56,.64,1); }
+    .dots-icon span { width:calc(7px); height:calc(7px); border-radius:calc(4px); background:#fff; transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
     .floating-ball.expanded .dots-icon { opacity:0; transform:scale(.6); }
-    .floating-ball.expanded .dots-icon span:nth-child(1){transform:translate(calc(8px),calc(8px))} .floating-ball.expanded .dots-icon span:nth-child(2){transform:translate(calc(-8px),calc(8px))} .floating-ball.expanded .dots-icon span:nth-child(3){transform:translate(calc(8px),calc(-8px))} .floating-ball.expanded .dots-icon span:nth-child(4){transform:translate(calc(-8px),calc(-8px))}
-    .close-icon { position:absolute; width:calc(24px); height:calc(24px); color:#fff; opacity:0; transform:scale(.5) rotate(-45deg); transition:opacity .2s, transform .3s cubic-bezier(.34,1.56,.64,1); pointer-events:none; }
+    .floating-ball.expanded .dots-icon span:nth-child(1){transform:translate(calc(9px),calc(9px))} .floating-ball.expanded .dots-icon span:nth-child(2){transform:translate(calc(-9px),calc(9px))} .floating-ball.expanded .dots-icon span:nth-child(3){transform:translate(calc(9px),calc(-9px))} .floating-ball.expanded .dots-icon span:nth-child(4){transform:translate(calc(-9px),calc(-9px))}
+    .close-icon { position:absolute; width:calc(28px); height:calc(28px); color:#fff; opacity:0; transform:scale(.5) rotate(-45deg); transition:opacity .2s, transform .3s cubic-bezier(.34,1.56,.64,1); pointer-events:none; }
     .floating-ball.expanded .close-icon { opacity:1; transform:scale(1) rotate(0); }
 
     /* ============================================================ */
