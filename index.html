@@ -3005,15 +3005,21 @@
         });
         menu.appendChild(el);
       });
-      document.body.appendChild(menu);
+      // 挂到 #app 内并换算成缩放前坐标，保证任何屏宽下都贴合按住的位置、大小也等比
+      const appEl = document.getElementById('app');
+      appEl.appendChild(menu);
+      const s = window.__appScale || 1;
+      const appRect = appEl.getBoundingClientRect();
+      const appW = appRect.width / s, appH = appRect.height / s;
+      const px = (x - appRect.left) / s, py = (y - appRect.top) / s;
       const menuW = menu.offsetWidth;
       const menuH = menu.offsetHeight;
-      let left = x - menuW / 2;
-      let top = y - menuH - 8;
+      let left = px - menuW / 2;
+      let top = py - menuH - 8;
       if (left < 8) left = 8;
-      if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
-      if (top < 8) top = y + 24;
-      if (top + menuH > window.innerHeight - 8) top = window.innerHeight - menuH - 8;
+      if (left + menuW > appW - 8) left = appW - menuW - 8;
+      if (top < 8) top = py + 24;
+      if (top + menuH > appH - 8) top = appH - menuH - 8;
       if (top < 8) top = 8;
       menu.style.left = left + 'px';
       menu.style.top = top + 'px';
@@ -3265,6 +3271,38 @@
       communityComposeBtn.addEventListener('click', () => { if (window.__openCompose) window.__openCompose(); });
     }
 
+    // ============================
+    // 等比缩放适配：以 375 * 1.15 ≈ 431px 为设计稿宽度。
+    // 视口更窄的手机上整体 scale 缩小，保证任何机型看到的比例完全一致；
+    // 视口不窄于设计稿时还原为原始样式（桌面居中展示不受影响）。
+    // ============================
+    (function initAppScale() {
+      const app = document.getElementById('app');
+      const DESIGN_W = 375 * 1.15; // 与 #app 的 width 公式保持一致
+      window.__appScale = 1;
+      function fit() {
+        const vw = window.innerWidth;
+        const s = Math.min(1, vw / DESIGN_W);
+        window.__appScale = s;
+        if (Math.abs(s - 1) < 0.002) {
+          app.style.transform = '';
+          app.style.transformOrigin = '';
+          app.style.width = '';
+          app.style.maxWidth = '';
+          app.style.height = '';
+        } else {
+          app.style.maxWidth = 'none';
+          app.style.width = DESIGN_W + 'px';
+          app.style.transformOrigin = 'top left';
+          app.style.transform = 'scale(' + s + ')';
+          // 视觉高度铺满视口：布局高度 = 视口高度 / 缩放比
+          app.style.height = (window.innerHeight / s) + 'px';
+        }
+      }
+      fit();
+      window.addEventListener('resize', fit);
+    })();
+
     // Floating Ball
     const floatingBall = document.querySelector('.floating-ball');
     const mainBall = document.getElementById('main-ball');
@@ -3287,11 +3325,12 @@
       const app = document.getElementById('app');
       const appRect = app.getBoundingClientRect();
       const ballRect = mainBall.getBoundingClientRect();
+      const s = window.__appScale || 1; // getBoundingClientRect 是缩放后的视觉值，落回样式前要除以 s
       const pos = getPointerPos(e);
       isDragging = true; moved = false;
       dragStartX = pos.x; dragStartY = pos.y;
-      ballStartX = ballRect.left - appRect.left;
-      ballStartY = ballRect.top - appRect.top;
+      ballStartX = (ballRect.left - appRect.left) / s;
+      ballStartY = (ballRect.top - appRect.top) / s;
       floatingBall.classList.add('dragging');
       window.addEventListener('mousemove', onDragMove);
       window.addEventListener('touchmove', onDragMove, { passive: true });
@@ -3308,11 +3347,13 @@
       const app = document.getElementById('app');
       const appRect = app.getBoundingClientRect();
       const ballRect = mainBall.getBoundingClientRect();
-      let newLeft = ballStartX + dx, newTop = ballStartY + dy;
-      const maxLeft = appRect.width - ballRect.width - 8, minLeft = 8;
+      const s = window.__appScale || 1;
+      const appW = appRect.width / s, ballW = ballRect.width / s, ballH = ballRect.height / s;
+      let newLeft = ballStartX + dx / s, newTop = ballStartY + dy / s;
+      const maxLeft = appW - ballW - 8, minLeft = 8;
       const tabBar = document.getElementById('tab-bar');
       const tabBarRect = tabBar.getBoundingClientRect();
-      const maxTop = tabBarRect.top - appRect.top - ballRect.height - 12, minTop = 16;
+      const maxTop = (tabBarRect.top - appRect.top) / s - ballH - 12, minTop = 16;
       newLeft = Math.max(minLeft, Math.min(maxLeft, newLeft));
       newTop = Math.max(minTop, Math.min(maxTop, newTop));
       floatingBall.style.left = newLeft + 'px';
@@ -3334,10 +3375,11 @@
         const app = document.getElementById('app');
         const appRect = app.getBoundingClientRect();
         const ballRect = mainBall.getBoundingClientRect();
-        const currentLeft = ballRect.left - appRect.left;
-        const ballCenterX = currentLeft + ballRect.width / 2;
-        const isLeft = ballCenterX < appRect.width / 2;
-        const targetLeft = isLeft ? 8 : appRect.width - ballRect.width - 8;
+        const s = window.__appScale || 1;
+        const currentLeft = (ballRect.left - appRect.left) / s;
+        const ballCenterX = currentLeft + ballRect.width / (2 * s);
+        const isLeft = ballCenterX < appRect.width / (2 * s);
+        const targetLeft = isLeft ? 8 : appRect.width / s - ballRect.width / s - 8;
         floatingBall.style.left = targetLeft + 'px';
         updatePanelDirection();
       }
