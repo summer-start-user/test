@@ -1220,9 +1220,9 @@
     .floating-ball.dragging { transition:none; }
     .floating-ball > * { pointer-events:auto; }
     .func-panel {
-      position:absolute; display:flex; align-items:center; gap:calc(18px); background:var(--card);
+      position:absolute; display:flex; align-items:center; justify-content:space-between; gap:calc(18px); background:var(--card);
       border-radius:calc(26px); padding:calc(14px) calc(18px); box-shadow:var(--shadow-md);
-      transform-origin:right center; transform:scaleX(0); opacity:0; width:calc(270px); overflow:hidden;
+      transform-origin:right center; transform:scaleX(0); opacity:0; width:calc(320px); overflow:hidden;
       transition:transform .35s cubic-bezier(.34,1.56,.64,1), opacity .25s;
       right:calc(100% + 10px); top:50%; margin-top:calc(-24px);
     }
@@ -1278,6 +1278,25 @@
     .community-empty p { font-size:calc(15px); font-weight:600; color:var(--text-gray); }
     .community-empty span { font-size:calc(13px); color:var(--text-light); }
   </style>
+
+<!-- ===== 跨页悬浮导航球（通道） ===== -->
+<style id="fnav-css">
+.fnav{position:fixed;z-index:9999;right:16px;bottom:22px;display:flex;flex-direction:column;align-items:flex-end;gap:12px;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif}
+.fnav-btn{width:54px;height:54px;border-radius:50%;border:.5px solid rgba(0,0,0,.06);background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%);box-shadow:0 10px 28px rgba(24,32,64,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6c5ce7;transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s;padding:0}
+.fnav-btn:active{transform:scale(.9)}
+.fnav-btn svg{width:24px;height:24px;stroke:#6c5ce7;fill:none}
+.fnav.open .fnav-btn{box-shadow:0 10px 28px rgba(108,92,231,.32)}
+.fnav-menu{display:flex;flex-direction:column;gap:8px;align-items:stretch;opacity:0;transform:translateY(10px) scale(.96);transform-origin:bottom right;pointer-events:none;transition:opacity .22s,transform .22s cubic-bezier(.22,1,.36,1)}
+.fnav.open .fnav-menu{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.fnav-item{display:flex;text-decoration:none;align-items:center;gap:10px;padding:9px 13px 9px 10px;border-radius:14px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%);box-shadow:0 8px 22px rgba(24,32,64,.14);border:.5px solid rgba(0,0,0,.05);cursor:pointer;white-space:nowrap;color:#2b2f3a;font-size:13.5px;font-weight:600;min-width:158px;transition:transform .15s,background .2s}
+.fnav-item:active{transform:scale(.97)}
+.fnav-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(108,92,231,.12);flex:none}
+.fnav-name{flex:1}
+.fnav-item.cur{color:#6c5ce7;background:rgba(108,92,231,.1)}
+.fnav-tag{font-size:9.5px;font-weight:700;color:#6c5ce7;background:rgba(108,92,231,.15);padding:1px 7px;border-radius:7px;margin-left:4px}
+.fnav-item.cur .fnav-tag{display:none}
+.fnav-item.cur::after{content:'当前';font-size:10px;color:#6c5ce7;opacity:.85;margin-left:2px}
+</style>
 </head>
 <body>
 
@@ -2017,8 +2036,8 @@
     <!-- ======================== -->
     <div class="floating-ball">
       <div class="func-panel">
-        <div class="func-item" data-open="psy"><div class="func-icon"><svg style="width:calc(24px);height:calc(24px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h4"/></svg></div><span class="func-label s4">心理驿站</span></div>
-        <div class="func-item"><div class="func-icon"><svg style="width:calc(24px);height:calc(24px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg></div><span class="func-label">成绩</span></div>
+        <div class="func-item" data-open="starplaza"><div class="func-icon"><svg style="width:calc(24px);height:calc(24px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg></div><span class="func-label s4">星隅广场</span></div>
+        <div class="func-item" data-open="smartliving"><div class="func-icon"><svg style="width:calc(24px);height:calc(24px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg></div><span class="func-label s4">智慧生活</span></div>
         <div class="func-item"><div class="func-icon"><svg style="width:calc(24px);height:calc(24px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><span class="func-label">图书馆</span></div>
         <div class="func-item"><div class="func-icon"><svg style="width:calc(24px);height:calc(24px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></div><span class="func-label">其他</span></div>
       </div>
@@ -3354,8 +3373,10 @@
     document.querySelectorAll('.func-item').forEach(item => {
       item.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (item.dataset.open === 'psy') {
-          window.location.href = 'psy-workstation/psy-workstation.html';
+        if (item.dataset.open === 'starplaza') {
+          window.location.href = new URL('星隅广场/Star-Corner-Plaza.html', location.href).href;
+        } else if (item.dataset.open === 'smartliving') {
+          window.location.href = new URL('智慧生活/Smart-Living.html', location.href).href;
         }
       });
     });
@@ -3866,5 +3887,39 @@
 
     showScreen('screen-home');
   </script>
+
+<div class="fnav" id="fnav">
+  <div class="fnav-menu" id="fnavMenu"></div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="页面通道">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+  </button>
+</div>
+
+<script id="fnav-js">
+(function(){
+  var PAGES=[
+    {key:'plaza', name:'星隅广场', ico:'🌟', path:'星隅广场/Star-Corner-Plaza.html', chan:true},
+    {key:'life',  name:'智慧生活', ico:'💡', path:'智慧生活/Smart-Living.html', chan:true},
+    {key:'home',  name:'校园主页', ico:'🏠', path:'index.html', chan:false}
+  ];
+  var here=location.pathname;
+  function curKey(){ if(here.indexOf('Star-Corner-Plaza')>=0) return 'plaza'; if(here.indexOf('Smart-Living')>=0) return 'life'; return 'home'; }
+  var cur=curKey();
+  function base(k){ return k==='home' ? '' : '../'; }
+  function abs(p){ try{ return new URL(base(cur)+p, location.href).href; }catch(e){ return base(cur)+p; } }
+  var menu=document.getElementById('fnavMenu');
+  PAGES.forEach(function(p){
+    var d=document.createElement(p.key===cur?'div':'a');
+    d.className='fnav-item'+(p.key===cur?' cur':'');
+    var tag = p.chan ? '<span class="fnav-tag">通道</span>' : '';
+    d.innerHTML='<span class="fnav-ico">'+p.ico+'</span><span class="fnav-name">'+p.name+'</span>'+tag;
+    if(p.key!==cur){ d.setAttribute('href', abs(p.path)); d.setAttribute('target','_self'); d.addEventListener('click',function(e){ e.stopPropagation(); }); }
+    menu.appendChild(d);
+  });
+  var fnav=document.getElementById('fnav'), btn=document.getElementById('fnavBtn');
+  btn.addEventListener('click',function(e){ e.stopPropagation(); fnav.classList.toggle('open'); });
+  document.addEventListener('click',function(e){ if(fnav.classList.contains('open')&&!fnav.contains(e.target)) fnav.classList.remove('open'); });
+})();
+</script>
 </body>
 </html>
