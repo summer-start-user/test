@@ -1279,6 +1279,9 @@
     .community-empty span { font-size:calc(13px); color:var(--text-light); }
   </style>
 
+  <!-- 模块化增强：新增屏幕与通用组件样式 -->
+  <link rel="stylesheet" href="app/screens.css">
+
 </head>
 <body>
 
@@ -2845,8 +2848,10 @@
     // 初始化所有 feed-card 的持久化状态
     document.querySelectorAll('.community-page .feed-card').forEach(initCardStats);
 
+    // 返回：交给统一路由出栈，保证「从哪进、回哪去」
     document.getElementById('postBackBtn').addEventListener('click', () => {
-      showScreen('screen-community');
+      if (window.App && App.Router) App.Router.back();
+      else showScreen('screen-community');
     });
 
     const postMoreBtn = document.getElementById('postMoreBtn');
@@ -2862,13 +2867,8 @@
       if (item && postMoreMenu) {
         e.stopPropagation();
         const act = item.dataset.act;
-        if (act === 'block') {
-          alert('已屏蔽该帖子，将减少类似内容（功能开发中）');
-        } else if (act === 'report') {
-          alert('举报已提交，我们会尽快核实处理（功能开发中）');
-        } else if (act === 'share') {
-          alert('分享功能开发中...');
-        }
+        // 屏蔽 / 举报 / 分享：转交模块化实现，替换原有的 alert 占位
+        if (window.App && App.handlePostMore) App.handlePostMore(act);
         postMoreMenu.classList.remove('open');
         return;
       }
@@ -2883,15 +2883,15 @@
       if (msgBtn) {
         e.stopPropagation();
         const card = msgBtn.closest('.feed-card');
-        const name = card ? card.querySelector('.feed-author').textContent : 'TA';
-        alert('给「' + name + '」发私信（功能开发中）');
+        const name = card ? card.querySelector('.feed-author').textContent.replace('楼主', '').trim() : 'TA';
+        if (window.App && App.handlePm) App.handlePm(name);
         return;
       }
       const followBtn = e.target.closest('.pill-follow');
       if (followBtn) {
         e.stopPropagation();
-        const following = followBtn.classList.toggle('following');
-        followBtn.textContent = following ? '已关注' : '+ 关注';
+        // 关注状态交给 App.handleFollow 持久化，避免刷新后丢失
+        if (window.App && App.handleFollow) App.handleFollow(followBtn);
         return;
       }
     });
@@ -3449,23 +3449,34 @@
 
     // ===== 我的页面交互 =====
     (function () {
+      // 以下入口统一转交「我的」模块实现（见 app/screens-me.js）
       document.querySelectorAll('#screen-profile .pstat').forEach(el => {
-        el.addEventListener('click', () => showToast(el.querySelector('.pstat-label').textContent + ' · 共 ' + el.querySelector('.pstat-val').textContent));
+        el.addEventListener('click', () => {
+          const label = el.querySelector('.pstat-label').textContent.trim();
+          if (window.App && App.handleStat) App.handleStat(label);
+          else showToast(label + ' · 共 ' + el.querySelector('.pstat-val').textContent);
+        });
       });
       document.querySelectorAll('#screen-profile .profile-header-actions .p-icon').forEach(el => {
-        el.addEventListener('click', () => showToast(el.getAttribute('data-tip') || '操作'));
+        el.addEventListener('click', () => {
+          const tip = el.getAttribute('data-tip') || '操作';
+          if (window.App && App.handleHeaderIcon) App.handleHeaderIcon(tip);
+          else showToast(tip);
+        });
       });
       document.querySelectorAll('#screen-profile .menu-item').forEach(el => {
         el.addEventListener('click', () => {
-          if (el.dataset.action === '心理咨询') {
-            window.location.href = 'psy-workstation/psy-workstation.html';
-            return;
-          }
-          showToast(el.querySelector('.menu-label').textContent + ' · 功能开发中');
+          if (window.App && App.handleProfileMenu) App.handleProfileMenu(el.dataset.action);
+          else showToast(el.querySelector('.menu-label').textContent + ' · 功能开发中');
         });
       });
       const logoutBtn = document.querySelector('#screen-profile .logout-btn');
-      if (logoutBtn) logoutBtn.addEventListener('click', () => showToast('已退出登录'));
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          if (window.App && App.handleLogout) App.handleLogout();
+          else showToast('已退出登录');
+        });
+      }
     })();
 
     // ===== 社区发布 / 我的发布 =====
@@ -3576,8 +3587,9 @@
         renderComposeImages();
         $('composePublish').disabled = true;
         $('composeEmojiPanel').classList.remove('show');
-        $('screen-compose').classList.add('active');
-        var tb = $('tab-bar'); if (tb) tb.style.display = 'none';
+        // 走统一路由入栈，保证返回键可用
+        if (window.App && App.Router) App.Router.push('screen-compose');
+        else { $('screen-compose').classList.add('active'); var tb = $('tab-bar'); if (tb) tb.style.display = 'none'; }
       }
       window.__openCompose = openCompose;
 
@@ -3712,12 +3724,15 @@
         var arr = loadPosts(); arr.unshift(p); savePosts(arr);
         insertPostEverywhere(p);
         showToast('发布成功');
-        $('screen-compose').classList.remove('active');
-        showScreen('screen-community');
+        if (window.App && App.Router) App.Router.back();
+        else { $('screen-compose').classList.remove('active'); showScreen('screen-community'); }
       });
 
       var cb = $('composeBack');
-      if (cb) cb.addEventListener('click', function () { $('screen-compose').classList.remove('active'); showScreen('screen-community'); });
+      if (cb) cb.addEventListener('click', function () {
+        if (window.App && App.Router) App.Router.back();
+        else { $('screen-compose').classList.remove('active'); showScreen('screen-community'); }
+      });
 
       function openMyPosts() {
         var arr = loadPosts();
@@ -3734,12 +3749,16 @@
               + '</div>';
           }).join('');
         }
-        $('screen-myposts').classList.add('active');
-        var tb = $('tab-bar'); if (tb) tb.style.display = 'none';
+        if (window.App && App.Router) App.Router.push('screen-myposts');
+        else { $('screen-myposts').classList.add('active'); var tb = $('tab-bar'); if (tb) tb.style.display = 'none'; }
       }
+      window.__openMyPosts = openMyPosts;
 
       var mpBack = $('myPostsBack');
-      if (mpBack) mpBack.addEventListener('click', function () { $('screen-myposts').classList.remove('active'); showScreen('screen-community'); });
+      if (mpBack) mpBack.addEventListener('click', function () {
+        if (window.App && App.Router) App.Router.back();
+        else { $('screen-myposts').classList.remove('active'); showScreen('screen-community'); }
+      });
 
       var mpList = $('myPostsList');
       if (mpList) mpList.addEventListener('click', function (e) {
@@ -3765,8 +3784,9 @@
       // 我的发布（profile quick-item）
       document.querySelectorAll('#screen-profile .quick-item').forEach(function (el) {
         el.addEventListener('click', function () {
-          if (el.dataset.action === '发布') { openMyPosts(); return; }
-          showToast(el.querySelector('span').textContent + ' · 功能开发中');
+          // 我的发布 / 收藏 / 历史：统一转交「我的」模块
+          if (window.App && App.handleQuickItem) App.handleQuickItem(el.dataset.action, el);
+          else if (el.dataset.action === '发布') openMyPosts();
         });
       });
 
@@ -3911,6 +3931,14 @@
 
     showScreen('screen-home');
   </script>
+
+  <!-- 模块化增强：基础层 → 路由 → 业务屏幕 → 总装配（加载顺序不可调整） -->
+  <script src="app/core.js"></script>
+  <script src="app/router.js"></script>
+  <script src="app/screens-home.js"></script>
+  <script src="app/screens-community.js"></script>
+  <script src="app/screens-me.js"></script>
+  <script src="app/boot.js"></script>
 
 </body>
 </html>
