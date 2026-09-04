@@ -3397,10 +3397,21 @@
     document.querySelectorAll('.func-item').forEach(item => {
       item.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (item.dataset.open === 'starplaza') {
-          window.location.href = new URL('星隅广场/Star-Corner-Plaza.html', location.href).href;
-        } else if (item.dataset.open === 'smartliving') {
-          window.location.href = new URL('智慧生活/Smart-Living.html', location.href).href;
+        const open = item.dataset.open;
+
+        // 点击后统一收起面板
+        if (floatingBall) floatingBall.classList.remove('expanded');
+        if (mainBall) mainBall.setAttribute('aria-label', '展开快捷功能');
+
+        if (open === 'starplaza') {
+          if (window.App && App.gotoSub) App.gotoSub('star-plaza/Star-Corner-Plaza.html', '星隅广场');
+          else window.location.href = new URL('star-plaza/Star-Corner-Plaza.html', location.href).href;
+        } else if (open === 'smartliving') {
+          if (window.App && App.gotoSub) App.gotoSub('smart-living/Smart-Living.html', '智慧生活');
+          else window.location.href = new URL('smart-living/Smart-Living.html', location.href).href;
+        } else if (window.App && App.handleFloatItem) {
+          // 「图书馆」「其他」：转交模块化实现
+          App.handleFloatItem((item.querySelector('.func-label') || {}).textContent || '');
         }
       });
     });
