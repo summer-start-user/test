@@ -429,52 +429,150 @@ em.hl { font-style: normal; color: var(--primary); font-weight: 600; }
  * ========================================================================== */
 .wk-switch {
   display: flex; align-items: center; justify-content: space-between;
+  gap: calc(8 * var(--u));
   padding: 0 calc(4 * var(--u)) calc(12 * var(--u));
 }
-.wk-switch-t { font-size: calc(15px); font-weight: 700; color: var(--text-dark); }
-.wk-switch-btns { display: flex; gap: calc(6 * var(--u)); }
+.wk-switch-l, .wk-switch-r { flex: none; display: flex; align-items: center; gap: calc(6 * var(--u)); }
+.wk-title {
+  flex: 1; display: flex; align-items: baseline; justify-content: center;
+  gap: calc(6 * var(--u)); min-width: 0;
+}
+.wk-switch-t {
+  font-size: calc(16px); font-weight: 800; color: var(--text-dark);
+  letter-spacing: .5px; white-space: nowrap;
+}
+.wk-now {
+  flex: none; font-size: calc(11px); font-weight: 700; color: var(--primary);
+  background: var(--bg-soft); padding: calc(2 * var(--u)) calc(8 * var(--u));
+  border-radius: 999px; white-space: nowrap;
+}
 .wk-nav {
-  width: calc(30 * var(--u)); height: calc(30 * var(--u));
-  border: 1px solid var(--border-strong); border-radius: calc(9 * var(--u));
+  width: calc(34 * var(--u)); height: calc(34 * var(--u));
+  border: 1px solid var(--border-strong); border-radius: calc(10 * var(--u));
   background: var(--card); color: var(--text-gray); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background .15s;
+  transition: background .15s, opacity .15s, transform .12s;
 }
-.wk-nav:active { background: var(--bg-soft); }
-.wk-nav svg { width: calc(15 * var(--u)); height: calc(15 * var(--u)); }
+.wk-nav:active { background: var(--bg-soft); transform: scale(.92); }
+.wk-nav:disabled { opacity: .3; cursor: not-allowed; transform: none; background: var(--card); }
+.wk-nav svg { width: calc(18 * var(--u)); height: calc(18 * var(--u)); }
+.wk-today-btn {
+  height: calc(34 * var(--u)); padding: 0 calc(12 * var(--u));
+  border: 1px solid var(--primary); border-radius: calc(10 * var(--u));
+  background: var(--card); color: var(--primary);
+  font-size: calc(13px); font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .12s;
+}
+.wk-today-btn:active { background: var(--bg-soft); transform: scale(.95); }
 
+/* 课表网格：列数 / 行数由 JS 按「有课的天数」与节次表注入（见 screens-home.js 的 tpl） */
 .wk-grid {
-  display: grid; grid-template-columns: calc(30 * var(--u)) repeat(7, 1fr);
+  display: grid;
   background: var(--card); border-radius: var(--r-md);
+  border: .5px solid var(--border);
   box-shadow: var(--shadow-sm); overflow: hidden;
 }
 .wk-hd {
-  padding: calc(8 * var(--u)) 0; text-align: center;
-  font-size: calc(11.5px); color: var(--text-light);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: calc(1.5 * var(--u));
+  padding: calc(7 * var(--u)) calc(1 * var(--u)) calc(8 * var(--u));
+  font-size: calc(11px); font-weight: 600; color: var(--text-light);
+  background: var(--bg-soft);
   border-bottom: .5px solid var(--border);
 }
-.wk-hd.today { color: var(--primary); font-weight: 700; }
-.wk-hd small { display: block; font-size: calc(10.5px); margin-top: calc(2 * var(--u)); }
+.wk-hd small {                                   /* 真实日期，如 9月4日 */
+  font-size: calc(8.5px); font-weight: 500; opacity: .85;
+  white-space: nowrap; line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.wk-hd.we { color: var(--text-dark); }          /* 周末：黑白灰表示「未上课」，不用暖色 */
+.wk-hd.we small { color: var(--text-light); opacity: 1; }
+/* 今天：主色实底胶囊徽标（类似现代日历 App 的 today 标记），与周末暖色规则天然兼容 */
+.wk-hd.today {
+  margin: calc(3 * var(--u)) calc(2 * var(--u)) calc(4 * var(--u));
+  padding: calc(4 * var(--u)) 0 calc(5 * var(--u));
+  border-radius: calc(10 * var(--u));
+  background: var(--primary); color: #fff; font-weight: 700;
+  box-shadow: 0 calc(2px) calc(6px) rgba(10, 89, 247, .30);
+}
+.wk-hd.today small { color: rgba(255, 255, 255, .85); opacity: 1; }
+
 .wk-slot {
-  min-height: calc(52 * var(--u)); padding: calc(3 * var(--u)) calc(2 * var(--u));
-  border-bottom: .5px solid var(--border); position: relative;
-}
-.wk-num {
-  font-size: calc(10.5px); color: var(--text-light);
-  padding: calc(6 * var(--u)) 0; text-align: center;
+  min-height: calc(46 * var(--u)); padding: calc(2.5 * var(--u));
   border-bottom: .5px solid var(--border);
+  border-left: .5px solid var(--border);        /* 竖向分隔线，空白格也能看清列 */
+  position: relative;
 }
+.wk-slot.we-col { background: rgba(107, 114, 123, .05); }    /* 周末列灰底，与黑白表头呼应「未上课」 */
+.wk-slot.today-col { background: rgba(10, 89, 247, .045); }  /* 今日整列高亮（放在周末之后，优先级更高） */
+
+.wk-num {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: calc(1.5 * var(--u)); text-align: center;
+  background: var(--bg-soft);
+  border-bottom: .5px solid var(--border);
+  position: relative;
+}
+.wk-num b { font-size: calc(12px); font-weight: 700; color: var(--text-dark); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.wk-num small { font-size: calc(8.5px); font-weight: 500; color: var(--text-gray); line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: calc(.2 * var(--u)); }
+/* 当前正在上的节（仅本周今天实时计算）：数字转主色 + 左缘主色竖条 + 脉冲小点 */
+.wk-num.now b { color: var(--primary); }
+.wk-num.now small { color: var(--primary); opacity: .7; }
+.wk-num.now::before {
+  content: ''; position: absolute; left: 0;
+  top: calc(6 * var(--u)); bottom: calc(6 * var(--u));
+  width: calc(2.5 * var(--u));
+  border-radius: 0 calc(2 * var(--u)) calc(2 * var(--u)) 0;
+  background: var(--primary);
+}
+.wk-num.now::after {
+  content: ''; position: absolute;
+  top: calc(5 * var(--u)); right: calc(3.5 * var(--u));
+  width: calc(4 * var(--u)); height: calc(4 * var(--u)); border-radius: 50%;
+  background: var(--primary);
+  animation: wkNowPulse 1.8s ease-out infinite;
+}
+@keyframes wkNowPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(10, 89, 247, .35); }
+  70%  { box-shadow: 0 0 0 calc(5 * var(--u)) rgba(10, 89, 247, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(10, 89, 247, 0); }
+}
+
+/* 有课的格子：padding 略大，按钮撑满跨行高度 */
+.wk-slot.has-cls { padding: calc(2.5 * var(--u)); }
 .wk-cls {
-  width: 100%; border-radius: calc(6 * var(--u));
-  padding: calc(5 * var(--u)) calc(4 * var(--u));
-  font-size: calc(10.5px); line-height: 1.35; color: #fff;
-  cursor: pointer; border: none; text-align: left;
+  position: relative;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  gap: calc(2.5 * var(--u));
+  border-radius: calc(8 * var(--u));
+  padding: calc(5 * var(--u)) calc(3.5 * var(--u));
+  color: #fff; cursor: pointer; border: none; text-align: left;
   font-family: inherit; overflow: hidden;
-  transition: transform .12s;
+  box-shadow: 0 calc(1.5px) calc(4px) rgba(17, 24, 39, .16),
+              inset 0 1px 0 rgba(255, 255, 255, .22);
+  transition: transform .12s, box-shadow .15s;
 }
-.wk-cls:active { transform: scale(.96); }
-.wk-cls b { display: block; font-size: calc(11px); font-weight: 600; }
-.wk-cls span { display: block; opacity: .88; font-size: calc(9.5px); }
+/* 顶部高光层：给色块一点"玻璃质感"的受光面 */
+.wk-cls::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .20), rgba(255, 255, 255, 0) 46%);
+  pointer-events: none;
+}
+.wk-cls:active {
+  transform: scale(.96);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, .12), inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+.wk-cls b {
+  font-size: calc(10.5px); font-weight: 600; line-height: 1.26;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .10);   /* 提升高亮底色上的可读性 */
+}
+.wk-cls span {
+  font-size: calc(9px); opacity: .92; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .wk-cls.k1 { background: linear-gradient(135deg, #60A5FA, #2563EB); }
 .wk-cls.k2 { background: linear-gradient(135deg, #34D399, #059669); }
 .wk-cls.k3 { background: linear-gradient(135deg, #FBBF24, #EA580C); }

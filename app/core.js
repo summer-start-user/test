@@ -272,11 +272,14 @@
   /* ======================================================================
    * 3. 通用 UI 组件 App.UI
    * ==================================================================== */
+  var _modalOpen = 0; // 当前已打开的弹窗（dialog/sheet）数量，仅用于防止弹窗叠加
+
   var UI = App.UI = {
 
     /* ---------------- Toast（串行队列，互不覆盖） ---------------- */
     _toastQueue: [],
     _toastBusy: false,
+    _toastCur: null,   // 当前正在显示的消息文案（仅用于排队期去重，不设时间锁）
 
     /**
      * @param {string} msg   文案
@@ -284,6 +287,13 @@
      */
     toast: function (msg, opt) {
       opt = opt || {};
+      // 防刷屏：同一条消息「正在显示」或「已在排队」时不再重复入队，避免连点排成长队。
+      // 注意：只做排队期去重，**不设任何时间锁**——消息播完后再点同一按钮可正常再弹；
+      //      且只影响消息展示，绝不阻塞业务动作本身。
+      if (msg === UI._toastCur) return;
+      for (var i = 0; i < UI._toastQueue.length; i++) {
+        if (UI._toastQueue[i].msg === msg) return;
+      }
       UI._toastQueue.push({ msg: msg, type: opt.type || 'info', duration: opt.duration || 1800 });
       UI._drainToast();
     },
@@ -295,6 +305,7 @@
       var layer = document.getElementById('ui-toast-layer');
       if (!layer) { UI._toastBusy = false; return; }
 
+      UI._toastCur = item.msg;
       var el = document.createElement('div');
       el.className = 'ui-toast ui-toast-' + item.type;
       el.setAttribute('role', 'status');
@@ -307,10 +318,12 @@
         setTimeout(function () {
           if (el.parentNode) el.parentNode.removeChild(el);
           UI._toastBusy = false;
+          UI._toastCur = null;   // 播完即解锁，同一条消息可再次弹出
           UI._drainToast();
         }, 220);
       }, item.duration);
     },
+
 
     /* ---------------- 二次确认框 ---------------- */
     /**
@@ -392,6 +405,11 @@
      */
     sheet: function (opt) {
       opt = opt || {};
+      // 仅防止弹窗叠加：已有弹窗在屏时忽略本次触发。
+      // 不设时间锁——面板关闭后再次点击可立即重新弹出。
+      if (_modalOpen > 0) return Promise.resolve(null);
+      _modalOpen++;
+
       return new Promise(function (resolve) {
         var items = (opt.items || []).map(function (it) {
           return '<button type="button" class="ui-sheet-item' + (it.danger ? ' danger' : '') + '" data-v="' +
@@ -419,6 +437,7 @@
         function close(v) {
           if (settled) return;
           settled = true;
+          _modalOpen = Math.max(0, _modalOpen - 1);
           mask.classList.remove('show');
           setTimeout(function () { if (mask.parentNode) mask.parentNode.removeChild(mask); }, 240);
           resolve(v);
@@ -435,6 +454,15 @@
 
     /* ---------------- 弹窗底座 ---------------- */
     _dialog: function (cfg) {
+      cfg = cfg || {};
+      // 仅防止弹窗叠加：已有弹窗在屏时忽略本次触发（按取消处理）。
+      // 不设时间锁——弹窗关闭后再次点击可立即重新弹出。
+      if (_modalOpen > 0) {
+        if (cfg.onClose) cfg.onClose(null);
+        return;
+      }
+      _modalOpen++;
+
       var mask = document.createElement('div');
       mask.className = 'ui-mask ui-mask-dialog';
       mask.innerHTML =
@@ -451,6 +479,7 @@
       function close(v) {
         if (settled) return;
         settled = true;
+        _modalOpen = Math.max(0, _modalOpen - 1);
         mask.classList.remove('show');
         setTimeout(function () { if (mask.parentNode) mask.parentNode.removeChild(mask); }, 200);
         cfg.onClose && cfg.onClose(v);

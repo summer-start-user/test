@@ -48,6 +48,7 @@
     plus: '<path d="M12 5v14M5 12h14"/>',
     check: '<polyline points="20 6 9 17 4 12"/>',
     chev: '<path d="m9 18 6-6-6-6"/>',
+    chevL: '<path d="m15 6-6 6 6 6"/>',
     chevD: '<path d="m6 9 6 6 6-6"/>',
     file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
     moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
@@ -76,6 +77,24 @@
    * ==================================================================== */
   var H = 3600000, D = 86400000;
   var now = Date.now();
+  var CUR_WEEK = 3; // 当前教学周（原型内置，后续可替换为接口数据）
+
+  /* 学期第一周的周一：由「今天」反推，使第 CUR_WEEK 周恒包含今天。
+     这样原型任何时候打开，表头日期都是真实且自洽的，无需维护硬编码开学日。 */
+  var TERM_START = (function () {
+    var t = new Date();
+    t.setHours(0, 0, 0, 0);
+    var dow = t.getDay() === 0 ? 7 : t.getDay();   // 1=周一 … 7=周日
+    t.setDate(t.getDate() - (dow - 1) - (CUR_WEEK - 1) * 7);
+    return t;
+  })();
+
+  /** 第 week 周、第 day 天（1=周一 … 7=周日）对应的真实日期 */
+  function dateOf(week, day) {
+    var d = new Date(TERM_START.getTime());
+    d.setDate(d.getDate() + (week - 1) * 7 + (day - 1));
+    return d;
+  }
 
   var Data = App.Data = {
 
@@ -726,44 +745,86 @@
     'screen-schedule': {
       title: '我的课表',
       render: function (params) {
-        var week = params.week || 3;
+        var week = params.week || CUR_WEEK;
         var dayNames = ['一', '二', '三', '四', '五', '六', '日'];
         var todayIdx = (function () { var d = new Date().getDay(); return d === 0 ? 7 : d; })();
+        var isCurWeek = week === CUR_WEEK;   // 只有看本周时才高亮「今天」，翻到别的周不该亮
 
-        var head = '<div class="wk-hd"></div>' + dayNames.map(function (d, i) {
-          return '<div class="wk-hd' + (i + 1 === todayIdx ? ' today' : '') + '">' + d +
-            '<small>' + (i + 1) + '</small></div>';
-        }).join('');
+        // 常显周一~周日：周末列始终占位，一旦有调课 / 补课 / 实验课排到周末能立刻看到
+        var days = [1, 2, 3, 4, 5, 6, 7];
 
-        var grid = '';
-        Data.sections.forEach(function (sec) {
-          grid += '<div class="wk-num">' + sec.s + '</div>';
-          for (var d = 1; d <= 7; d++) {
-            var course = null;
-            for (var i = 0; i < Data.courses.length; i++) {
-              var c = Data.courses[i];
-              if (c.day === d && sec.s >= c.sec && sec.s < c.sec + c.len) { course = c; break; }
-            }
-            // 只在起始节次渲染课程块，避免重复
-            if (course && sec.s === course.sec) {
-              grid += '<div class="wk-slot"><button type="button" class="wk-cls k' + course.color +
-                '" data-go="screen-course" data-param=\'{"id":"' + course.id + '"}\'>' +
-                '<b>' + util.esc(course.name) + '</b><span>' + util.esc(course.room) + '</span></button></div>';
-            } else if (course) {
-              grid += '<div class="wk-slot" style="padding:0"></div>';
-            } else {
-              grid += '<div class="wk-slot"></div>';
-            }
-          }
+        // 占用表：day-sec -> course（含跨节的延续节），用于让课程块真正跨行
+        var occupy = {};
+        Data.courses.forEach(function (c) {
+          for (var k = 0; k < (c.len || 1); k++) occupy[c.day + '-' + (c.sec + k)] = c;
         });
 
-        return '<div class="wk-switch"><div class="wk-switch-t">第 ' + week + ' 周</div>' +
-          '<div class="wk-switch-btns">' +
-          '<button type="button" class="wk-nav" data-week="-1" aria-label="上一周">' + ic('chev', 15) + '</button>' +
-          '<button type="button" class="wk-nav" data-week="0" aria-label="本周">今</button>' +
-          '<button type="button" class="wk-nav" data-week="1" style="transform:rotate(180deg)" aria-label="下一周">' + ic('chev', 15) + '</button>' +
-          '</div></div>' +
-          '<div class="wk-grid">' + head + grid + '</div>' +
+        // 当前正在上的节（仅本周的今天才有）：节开始 ≤ 现在 < 下一节开始（末节默认 45 分钟）
+        // 用于节次列的 now 标记（主色竖条 + 脉冲点）
+        var nowSec = -1;
+        if (isCurWeek) {
+          var _now = new Date();
+          var nowMin = _now.getHours() * 60 + _now.getMinutes();
+          Data.sections.forEach(function (sec, i) {
+            var _t = function (s) { var p = s.split(':'); return (+p[0]) * 60 + (+p[1]); };
+            var st = _t(sec.t);
+            var en = i + 1 < Data.sections.length ? _t(Data.sections[i + 1].t) : st + 45;
+            if (nowMin >= st && nowMin < en) nowSec = sec.s;
+          });
+        }
+
+        // 网格模板：节次列尽量窄，把宽度让给 7 个日期列；行需显式最小高度，跨行块才能撑满
+        var tpl = 'grid-template-columns:calc(31 * var(--u)) repeat(' + days.length + ', minmax(0, 1fr));' +
+          'grid-template-rows:auto repeat(' + Data.sections.length + ', minmax(calc(46 * var(--u)), auto));';
+
+        // 表头：周几 + 真实日期（几月几日）；周末加 we 标记，本周的今天加 today
+        var grid = '<div class="wk-hd wk-hd-num"></div>' + days.map(function (d) {
+          var dt = dateOf(week, d);
+          var isToday = isCurWeek && d === todayIdx;
+          var hcls = 'wk-hd' + (d >= 6 ? ' we' : '') + (isToday ? ' today' : '');
+          return '<div class="' + hcls + '">' +
+            '<span>周' + dayNames[d - 1] + '</span>' +
+            '<small>' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日</small>' +
+            '</div>';
+        }).join('');
+
+        // 主体：课程块用 grid-row span 真正跨节，消除「课程下方留空洞」的旧问题
+        Data.sections.forEach(function (sec, ri) {
+          var row = ri + 2; // 第 1 行留给表头
+          var numCls = 'wk-num' + (sec.s === nowSec ? ' now' : '');
+          grid += '<div class="' + numCls + '" style="grid-column:1;grid-row:' + row + '">' +
+            '<b>' + sec.s + '</b><small>' + sec.t + '</small></div>';
+          days.forEach(function (d, ci) {
+            var c = occupy[d + '-' + sec.s];
+            if (c && sec.s !== c.sec) return; // 延续节：已被上方跨行块覆盖，不再渲染
+            var cls = 'wk-slot' + (isCurWeek && d === todayIdx ? ' today-col' : (d >= 6 ? ' we-col' : '')) + (c ? ' has-cls' : '');
+            var pos = 'grid-column:' + (ci + 2) + ';grid-row:' + row + (c ? ' / span ' + (c.len || 1) : '') + ';';
+            grid += '<div class="' + cls + '" style="' + pos + '">' + (c
+              ? '<button type="button" class="wk-cls k' + c.color + '" data-go="screen-course" data-param=\'{"id":"' + c.id + '"}\'>' +
+                '<b>' + util.esc(c.name) + '</b><span>' + util.esc(c.room) + '</span></button>'
+              : '') + '</div>';
+          });
+        });
+
+        var isCur = isCurWeek;
+        var prevDis = week <= 1 ? ' disabled' : '';
+        var nextDis = week >= 20 ? ' disabled' : '';
+        var todayBtn = isCur ? '' :
+          '<button type="button" class="wk-today-btn" data-week="0">今</button>';
+        var nowBadge = isCur ? '<span class="wk-now">本周</span>' : '';
+
+        return '<div class="wk-switch">' +
+          '<div class="wk-switch-l">' +
+            '<button type="button" class="wk-nav" data-week="-1" aria-label="上一周"' + prevDis + '>' + ic('chevL', 18) + '</button>' +
+          '</div>' +
+          '<div class="wk-title">' +
+            '<span class="wk-switch-t">第 ' + week + ' 周</span>' + nowBadge +
+          '</div>' +
+          '<div class="wk-switch-r">' + todayBtn +
+            '<button type="button" class="wk-nav" data-week="1" aria-label="下一周"' + nextDis + '>' + ic('chev', 18) + '</button>' +
+          '</div>' +
+        '</div>' +
+          '<div class="wk-grid" style="' + tpl + '">' + grid + '</div>' +
           '<div class="blk" style="margin-top:16px"><div class="blk-title">本周课程</div><div class="blk-card">' +
           Data.courses.map(function (c) {
             return '<div class="lst-item" data-go="screen-course" data-param=\'{"id":"' + c.id + '"}\'>' +
@@ -774,14 +835,17 @@
           }).join('') + '</div></div>';
       },
       mount: function (root, params) {
-        root.querySelector('.app-body').addEventListener('click', function (e) {
+        // 监听收敛到 .wk-switch：每次渲染该节点会被重建，避免重复 mount 时监听器累积导致「点一次跳多周」
+        var sw = root.querySelector('.wk-switch');
+        if (!sw) return;
+        sw.addEventListener('click', function (e) {
           var w = e.target.closest('[data-week]');
-          if (!w) return;
+          if (!w || w.disabled) return;
           var delta = parseInt(w.dataset.week, 10);
-          var cur = (params.week || 3);
-          var next = delta === 0 ? 3 : Math.max(1, Math.min(20, cur + delta));
-          Router.replace('screen-schedule', { week: next });
-          UI.toast(delta === 0 ? '已回到本周' : '第 ' + next + ' 周');
+          var cur = (params.week || CUR_WEEK);
+          var target = delta === 0 ? CUR_WEEK : Math.max(1, Math.min(20, cur + delta));
+          if (target === cur) return; // 已在本周 / 已在边界，不重复跳转，也不再弹提示
+          Router.replace('screen-schedule', { week: target });
         });
       }
     },

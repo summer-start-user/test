@@ -57,14 +57,14 @@
      * @param {string} id
      * @param {object} [params]
      */
-    push: function (id, params) {
+    push: function (id, params, replaceHistory) {
       if (!_registry[id] && NATIVE.indexOf(id) === -1) {
         console.warn('[Router] 未注册的屏幕：' + id);
         return;
       }
       _stack.push({ id: id, params: params || {} });
       _activate(_stack[_stack.length - 1]);
-      _syncHistory();
+      _syncHistory(replaceHistory);
     },
 
     /**
@@ -116,10 +116,12 @@
       }
     },
 
-    /** 用新页面替换栈顶（如：保存资料后回到上一层并刷新） */
+    /** 用新页面替换栈顶（如：周次切换 / 保存资料后刷新当前页）
+     *  关键：复用 replaceState 替换当前历史项，不新增历史记录，
+     *  否则返回箭头需回退多层（点一次箭头就多一条历史，导致回不了首页）。 */
     replace: function (id, params) {
       _stack.pop();
-      Router.push(id, params);
+      Router.push(id, params, true);
     },
 
     /** 重新渲染当前屏幕（数据变更后刷新视图） */
